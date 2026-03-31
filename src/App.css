@@ -1,38 +1,1065 @@
+/* ===== Variables ===== */
+:root {
+  --bg:      #FAFAF7;
+  --card:    #FFFFFF;
+  --text:    #3D2B1F;
+  --muted:   #9E8272;
+  --brown:   #6B4F3A;
+  --accent:  #E8874A;
+  --rarity-r:#B07820;
+  --shadow:  0 2px 10px rgba(107, 79, 58, 0.10);
+}
+
+/* ===== Reset ===== */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Hiragino Sans', 'Yu Gothic', 'Noto Sans JP', sans-serif;
+}
+
 .App {
+  min-height: 100vh;
+}
+
+/* ===== Screen base ===== */
+.screen {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+/* ===== Header ===== */
+.app-header {
+  background: var(--brown);
+  color: #fff;
+  padding: 28px 20px 20px;
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.app-header h1 {
+  margin: 0 0 6px;
+  font-size: 1.8rem;
+  letter-spacing: 0.06em;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.app-subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.85;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* ===== Peace Meter ===== */
+.peace-meter {
+  background: var(--card);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 16px 20px;
+  max-width: 680px;
+  margin: 24px auto 8px;
+}
+
+.peace-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.peace-title {
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: var(--brown);
+}
+
+.peace-pct {
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.peace-bar-bg {
+  background: #EDE4DC;
+  border-radius: 99px;
+  height: 12px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.peace-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 99px;
+  transition: width 0.6s ease;
+}
+
+.peace-comment {
+  font-size: 0.82rem;
+  font-weight: bold;
+  text-align: right;
+}
+
+/* ===== Yokai Section ===== */
+.yokai-section {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+
+.yokai-section h2 {
+  font-size: 1.1rem;
+  color: var(--brown);
+  margin: 28px 0 16px;
+  text-align: center;
+}
+
+/* ===== Yokai Grid ===== */
+.yokai-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+  gap: 14px;
+}
+
+/* ===== Yokai Card ===== */
+.yokai-card {
+  background: var(--card);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 16px 12px 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 5px;
+  border: 1.5px solid transparent;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.yokai-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(107, 79, 58, 0.15);
+}
+
+.yokai-card.rarity-R {
+  border-color: var(--rarity-r);
+}
+
+.yokai-id {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.yokai-name {
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--brown);
+}
+
+.yokai-feature {
+  font-size: 0.78rem;
+  color: var(--text);
+  line-height: 1.45;
+  text-align: center;
+}
+
+.yokai-habitat {
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.yokai-rarity {
+  font-size: 0.74rem;
+  font-weight: bold;
+  color: var(--rarity-r);
+}
+
+.yokai-card.rarity-N .yokai-rarity {
+  color: var(--muted);
+}
+
+/* ===== Buttons ===== */
+.btn-primary {
+  margin-top: 6px;
+  padding: 8px 22px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+  letter-spacing: 0.04em;
+}
+
+.btn-primary:hover  { opacity: 0.85; transform: scale(1.04); }
+.btn-primary:active { transform: scale(0.97); }
+
+.btn-ghost {
+  margin-top: 6px;
+  padding: 8px 22px;
+  background: transparent;
+  color: var(--brown);
+  border: 1.5px solid var(--brown);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-ghost:hover { background: #EDE4DC; }
+
+/* ===== 遭遇画面 ===== */
+.encounter-screen {
+  display: flex;
+  align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.encounter-box {
+  background: var(--card);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 40px 32px;
+  text-align: center;
+  max-width: 380px;
+  width: 90%;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.encounter-report {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+
+.encounter-location {
+  font-size: 1rem;
+  color: var(--brown);
+  font-weight: bold;
+  margin: 0 0 4px;
+}
+
+.encounter-yokai-name {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: var(--accent);
+  margin: 0 0 16px;
+}
+
+.encounter-question {
+  font-size: 0.95rem;
+  color: var(--text);
+  margin: 0 0 24px;
+}
+
+.encounter-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+/* ===== 説明シーン ===== */
+.description-scene {
+  min-height: 100vh;
+  background: #2a1a0e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.8s ease;
+}
+
+.description-scene.fadeout {
+  opacity: 0;
+}
+
+.description-box {
+  max-width: 480px;
+  width: 90%;
+  text-align: center;
+}
+
+.description-text {
+  color: #f0e6d8;
+  font-size: 1.05rem;
+  line-height: 2;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.scene-dark {
+  min-height: 100vh;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scene-phrase-wrap {}
+
+.scene-phrase {
+  color: #e0d4c8;
+  font-size: 1.2rem;
+  letter-spacing: 0.1em;
+  animation: fadeInPhrase 0.8s ease forwards;
+  opacity: 0;
+}
+
+@keyframes fadeInPhrase {
+  to { opacity: 1; }
+}
+
+/* ===== 捕獲画面 ===== */
+.capture-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.capture-box {
+  background: var(--card);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 40px 28px 32px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+}
+
+.capture-yokai-name {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: var(--brown);
+  margin: 0 0 10px;
+}
+
+.capture-prompt {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 0 0 24px;
+}
+
+.capture-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.capture-choice-btn {
+  padding: 14px 20px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1.5px solid #D4C4B0;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  text-align: left;
+}
+
+.capture-choice-btn:hover:not(:disabled) {
+  background: #FFF4EC;
+  border-color: var(--accent);
+}
+
+.capture-choice-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.capture-choice-btn.miss {
+  background: #FFF0F0;
+  border-color: #E05555;
+  color: #E05555;
+  animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+
+.capture-miss-msg {
+  font-size: 0.88rem;
+  color: #E05555;
+  font-weight: bold;
+  margin: 0 0 16px;
+  animation: fadeInPhrase 0.3s ease forwards;
+}
+
+.capture-back-btn {
+  margin-top: 4px;
+}
+
+/* 捕獲成功 */
+.capture-hint {
+  font-size: 0.85rem;
+  color: var(--accent);
+  font-weight: bold;
+  margin: 0 0 8px;
+  letter-spacing: 0.08em;
+}
+
+.capture-shrink {
+  animation: shrinkIn 0.5s ease forwards;
+}
+
+@keyframes shrinkIn {
+  0%   { transform: scale(1.3); opacity: 0; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+.capture-success-msg {
+  font-size: 0.95rem;
+  color: var(--text);
+  line-height: 1.8;
+  margin: 16px 0 24px;
+}
+
+.capture-next-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 1rem;
+  border-radius: 14px;
+  margin-top: 0;
+}
+
+/* ===== ホームセクションヘッダー ===== */
+.home-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 28px 0 16px;
+}
+
+.home-section-header h2 {
+  font-size: 1.1rem;
+  color: var(--brown);
+  margin: 0;
+}
+
+.hall-link-btn {
+  margin-top: 0;
+  font-size: 0.82rem;
+  padding: 6px 16px;
+}
+
+/* ===== 更生画面 ===== */
+.rehab-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.rehab-box {
+  background: var(--card);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 32px 24px 28px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+}
+
+.rehab-yokai-name {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--brown);
+  margin: 0 0 20px;
+}
+
+/* 更生度ゲージ */
+.rehab-gauge-wrap {
+  margin-bottom: 16px;
+}
+
+.rehab-gauge-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.rehab-gauge-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: bold;
+}
+
+.rehab-gauge-pct {
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--accent);
+}
+
+.rehab-gauge-bg {
+  background: #EDE4DC;
+  border-radius: 99px;
+  height: 14px;
+  overflow: hidden;
+}
+
+.rehab-gauge-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.rehab-gauge-fill.max {
+  background: #4a9a6a;
+}
+
+/* リアクション */
+.rehab-reaction-area {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.rehab-reaction {
+  font-size: 0.92rem;
+  color: var(--text);
+  background: #FFF8F2;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  text-align: left;
+  line-height: 1.5;
+  animation: reactionFadeIn 0.35s ease forwards;
+  opacity: 0;
+}
+
+@keyframes reactionFadeIn {
+  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+/* アクションボタン群 */
+.rehab-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.rehab-action-btn {
+  padding: 14px 8px;
+  background: var(--bg);
+  color: var(--brown);
+  border: 1.5px solid #D4C4B0;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-family: inherit;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.rehab-action-btn:hover {
+  background: #FFF4EC;
+  border-color: var(--accent);
+}
+
+/* 会話選択肢 */
+.rehab-talk-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.rehab-talk-prompt {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0 0 4px;
+}
+
+.rehab-talk-option-btn {
+  padding: 12px 16px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1.5px solid #D4C4B0;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  text-align: left;
+}
+
+.rehab-talk-option-btn:hover {
+  background: #FFF4EC;
+  border-color: var(--accent);
+}
+
+.rehab-cancel-btn {
+  margin-top: 0;
+  font-size: 0.82rem;
+  padding: 8px 16px;
+}
+
+/* 解放エリア */
+.rehab-release-area {
+  margin-top: 8px;
+}
+
+.rehab-complete-msg {
+  font-size: 0.95rem;
+  color: #4a9a6a;
+  font-weight: bold;
+  line-height: 1.7;
+  margin: 0 0 16px;
+  animation: reactionFadeIn 0.5s ease forwards;
+  opacity: 0;
+}
+
+.rehab-release-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 1rem;
+  border-radius: 14px;
+  margin-top: 0;
+  background: #4a9a6a;
+}
+
+.rehab-release-btn:hover { opacity: 0.85; }
+
+/* 解放完了メッセージ */
+.rehab-release-msg {
+  font-size: 1.1rem;
+  color: var(--brown);
+  line-height: 2;
+  animation: reactionFadeIn 0.6s ease forwards;
+  opacity: 0;
+}
+
+/* ===== 殿堂画面 ===== */
+.hall-screen {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.hall-header {
+  background: var(--brown);
+  color: #fff;
+  padding: 20px 20px 16px;
+  text-align: center;
+  position: relative;
+}
+
+.hall-back-btn {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-top: 0;
+  color: #fff;
+  border-color: rgba(255,255,255,0.6);
+  font-size: 0.82rem;
+  padding: 6px 14px;
+}
+
+.hall-back-btn:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+.hall-header h2 {
+  margin: 0 0 4px;
+  font-size: 1.4rem;
+  letter-spacing: 0.06em;
+}
+
+.hall-subtitle {
+  margin: 0;
+  font-size: 0.82rem;
+  opacity: 0.8;
+}
+
+.hall-empty {
+  text-align: center;
+  color: var(--muted);
+  margin-top: 60px;
+  font-size: 0.95rem;
+}
+
+.hall-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  max-width: 840px;
+  margin: 28px auto;
+  padding: 0 16px;
+}
+
+.hall-card {
+  background: var(--card);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 18px 16px;
+  text-align: center;
+  border: 1.5px solid transparent;
+  animation: reactionFadeIn 0.4s ease forwards;
+  opacity: 0;
+}
+
+.hall-card.rarity-R {
+  border-color: var(--rarity-r);
+}
+
+.hall-card-id {
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.hall-card-name {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--brown);
+  margin-bottom: 10px;
+}
+
+.hall-card-farewell {
+  font-size: 0.82rem;
+  color: var(--text);
+  line-height: 1.6;
+  background: #FFF8F2;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+
+.hall-card-rarity {
+  font-size: 0.74rem;
+  font-weight: bold;
+  color: var(--muted);
+}
+
+.hall-card.rarity-R .hall-card-rarity {
+  color: var(--rarity-r);
+}
+
+/* ===== 見つからなかった画面 ===== */
+.missed-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.missed-box {
+  background: var(--card);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 48px 32px;
+  text-align: center;
+  max-width: 360px;
+  width: 90%;
+  animation: reactionFadeIn 0.4s ease forwards;
+  opacity: 0;
+}
+
+.missed-name {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: var(--brown);
+  margin: 0 0 12px;
+}
+
+.missed-msg {
+  font-size: 1.05rem;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+
+.missed-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ===== 捕獲画面：HPバー ===== */
+.capture-hp-wrap {
+  margin: 0 0 16px;
+}
+
+.capture-hp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.capture-hp-label {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+.capture-hp-pct {
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.capture-hp-bg {
+  height: 10px;
+  background: #EDE6DE;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.capture-hp-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.4s ease, background-color 0.4s ease;
+}
+
+/* 残りターン・特殊状態・結果 */
+.capture-turns-left {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+
+.capture-special-msg {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: var(--brown);
+  margin: 0 0 16px;
+  min-height: 1.4em;
+  animation: fadeInPhrase 0.3s ease forwards;
+}
+
+.capture-result-msg {
+  font-size: 0.9rem;
+  color: var(--text);
+  margin: 0 0 20px;
+  animation: fadeInPhrase 0.3s ease forwards;
+}
+
+/* ===== 捕獲画面：逃げられた ===== */
+
+.capture-escaped-label {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #E05555;
+  margin: 0 0 8px;
+}
+
+.capture-escaped-msg {
+  font-size: 0.9rem;
+  color: var(--muted);
+  line-height: 1.7;
+  margin: 12px 0 24px;
+}
+
+/* ===== 捕獲画面：諦めるリンク ===== */
+.capture-give-up-wrap {
+  text-align: right;
+  margin-top: 20px;
+}
+
+.capture-give-up-link {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  opacity: 0.7;
+}
+
+.capture-give-up-link:hover {
+  opacity: 1;
+}
+
+/* ===== ホーム：更生バナー ===== */
+.home-rehab-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFF4EC;
+  border: 1.5px solid var(--accent);
+  border-radius: 14px;
+  padding: 12px 16px;
+  margin: 0 16px 16px;
+}
+
+.home-rehab-count {
+  font-size: 0.9rem;
+  color: var(--brown);
+  font-weight: bold;
+}
+
+.home-rehab-btn {
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  border-radius: 10px;
+  margin: 0;
+}
+
+/* ===== 更生リスト画面 ===== */
+.rehab-list-screen {
+  padding: 0 0 40px;
+}
+
+.rehab-list-header {
+  padding: 20px 16px 12px;
+  border-bottom: 1px solid #EDE6DE;
+  margin-bottom: 20px;
+}
+
+.rehab-list-back-btn {
+  font-size: 0.85rem;
+  padding: 6px 12px;
+  margin-bottom: 8px;
+}
+
+.rehab-list-header h2 {
+  font-size: 1.4rem;
+  color: var(--brown);
+  margin: 0 0 4px;
+}
+
+.rehab-list-subtitle {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.rehab-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+  padding: 0 16px;
+}
+
+.rehab-list-card {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 16px 14px;
+  text-align: center;
+  border-top: 3px solid #D4C4B0;
+}
+
+.rehab-list-card.rarity-R {
+  border-top-color: var(--rarity-r);
+}
+
+.rehab-list-card-id {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.rehab-list-card-name {
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--brown);
+  margin-bottom: 4px;
+}
+
+.rehab-list-card-feature {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.rehab-list-card-rarity {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.rehab-list-select-btn {
+  width: 100%;
+  padding: 8px;
+  font-size: 0.85rem;
+  border-radius: 10px;
+  margin: 0;
+}
+
+/* ===== 更生画面：不満度ゲージ ===== */
+.rehab-dissatisfaction-wrap {
+  margin: 0 0 14px;
+}
+
+.rehab-dissatisfaction-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.rehab-dissatisfaction-label {
+  font-size: 0.78rem;
+  font-weight: bold;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.rehab-dissatisfaction-pct {
+  font-size: 0.82rem;
+  font-weight: bold;
+}
+
+.rehab-dissatisfaction-bg {
+  height: 7px;
+  background: #EDE6DE;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rehab-dissatisfaction-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease, background-color 0.4s ease;
+}
+
+/* ===== 更生画面：逆効果リアクション・ヒント ===== */
+.rehab-reaction.bad {
+  background: #FFF0F0;
+  border-left-color: #E05555;
+  color: #c03030;
+}
+
+.rehab-rarity-hint {
+  font-size: 0.74rem;
+  color: var(--rarity-r);
+  text-align: right;
+  margin: 4px 0 0;
+}
+
+.rehab-hint {
+  font-size: 0.88rem;
+  color: var(--muted);
+  background: #F5F0EB;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0 0 14px;
+  text-align: center;
+  font-style: italic;
+}
+
+.rehab-action-alone {
+  grid-column: 1 / -1;
+  background: #F0EBE5;
+  border-color: #C4B4A4;
 }
