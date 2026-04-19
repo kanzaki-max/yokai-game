@@ -17,13 +17,18 @@
 
 body {
   margin: 0;
-  background: var(--bg);
+  background: #2a1f17;
   color: var(--text);
   font-family: 'Hiragino Sans', 'Yu Gothic', 'Noto Sans JP', sans-serif;
 }
 
 .App {
   min-height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--bg);
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.4);
+  position: relative;
 }
 
 /* ===== Screen base ===== */
@@ -50,55 +55,6 @@ body {
   margin: 0;
   font-size: 0.85rem;
   opacity: 0.85;
-}
-
-/* ===== Peace Meter ===== */
-.peace-meter {
-  background: var(--card);
-  border-radius: 14px;
-  box-shadow: var(--shadow);
-  padding: 16px 20px;
-  max-width: 680px;
-  margin: 24px auto 8px;
-}
-
-.peace-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.peace-title {
-  font-size: 0.95rem;
-  font-weight: bold;
-  color: var(--brown);
-}
-
-.peace-pct {
-  font-size: 1.3rem;
-  font-weight: bold;
-}
-
-.peace-bar-bg {
-  background: #EDE4DC;
-  border-radius: 99px;
-  height: 12px;
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-
-.peace-bar-fill {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 99px;
-  transition: width 0.6s ease;
-}
-
-.peace-comment {
-  font-size: 0.82rem;
-  font-weight: bold;
-  text-align: right;
 }
 
 /* ===== Yokai Section ===== */
@@ -2653,6 +2609,17 @@ body {
 .capture-skill-power  { font-size: 0.75rem; color: var(--muted); background: rgba(243,237,232,0.9); padding: 1px 6px; border-radius: 6px; }
 .capture-skill-effect { font-size: 0.75rem; color: #7b52ab; background: rgba(243,238,255,0.9); padding: 1px 6px; border-radius: 6px; }
 
+.capture-skill-btn.skill-exhausted {
+  opacity: 0.45;
+  filter: grayscale(0.7);
+  cursor: not-allowed;
+  border-color: #ccc;
+  background: rgba(230,230,230,0.7);
+}
+.capture-skill-btn.skill-exhausted:active { transform: none; }
+.skill-use-count     { font-size: 0.72rem; color: #888; padding: 1px 5px; border-radius: 5px; background: rgba(220,220,220,0.6); }
+.skill-use-exhausted { color: #999; background: rgba(200,200,200,0.5); }
+
 /* 攻撃結果メッセージ */
 .result-super { color: #2a7a4a !important; font-weight: bold; }
 .result-weak  { color: #888 !important; }
@@ -2896,4 +2863,112 @@ body {
   width: 100%;
   font-size: 1.05rem;
   padding: 14px;
+}
+
+/* ===== Responsive ===== */
+
+/* ボタン：タップしやすいサイズ（最低44px）*/
+.btn-primary,
+.btn-ghost,
+.location-btn,
+.capture-choice-btn,
+.rehab-action-btn,
+.capture-skill-btn {
+  min-height: 44px;
+}
+
+/* 画像はmax-widthで収まるように */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 捕獲画面の位置固定オーバーレイはApp幅に合わせる */
+.magic-circle-overlay {
+  max-width: 480px;
+  left: 50%;
+  transform: translateX(-50%);
+  right: auto;
+  width: 100%;
+}
+
+/* ===== スマホ（〜480px）===== */
+@media (max-width: 480px) {
+  .app-header h1     { font-size: 1.5rem; }
+  .app-header        { padding: 20px 16px 16px; }
+  .app-subtitle      { font-size: 0.78rem; }
+
+  /* ホーム */
+  .home-btn-row      { padding: 8px 12px 4px; gap: 8px; }
+  .location-section  { padding: 0 12px; }
+  .location-btn      { padding: 16px 8px; }
+  .location-btn-icon { font-size: 1.5rem; }
+  .location-btn-label{ font-size: 0.88rem; }
+
+  /* 捕獲バトル */
+  .capture-box       { padding: 14px 14px 18px; }
+  .yokai-img-xl,
+  .yokai-img-placeholder-xl {
+    width: 200px;
+    height: 200px;
+  }
+  .capture-choices   { gap: 8px; margin-bottom: 14px; }
+  .capture-choice-btn{ padding: 12px 14px; font-size: 0.9rem; }
+  .capture-skill-list{ gap: 6px; }
+  .capture-skill-btn { padding: 9px 12px; font-size: 0.85rem; }
+
+  /* 説明シーン */
+  .description-intro { font-size: 0.95rem; }
+  .description-sub   { font-size: 0.9rem; }
+  .description-text  { font-size: 0.95rem; line-height: 1.9; }
+
+  /* 更生画面 */
+  .rehab-box         { padding: 20px 16px 20px; }
+  .rehab-actions     { gap: 8px; }
+  .rehab-action-btn  { padding: 12px 6px; font-size: 0.84rem; }
+
+  /* 図鑑 */
+  .dex-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 0 12px 32px;
+  }
+
+  /* デッキ編成 */
+  .deck-skill-list   { padding: 10px 12px; }
+  .deck-skill-card   { padding: 10px 12px; }
+
+  /* 殿堂 */
+  .hall-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 0 12px;
+    margin: 20px auto;
+  }
+
+  /* 更生リスト */
+  .rehab-list-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 0 12px;
+  }
+
+  /* タイトル */
+  .title-content     { padding: 0 16px; }
+  .title-sub         { font-size: 0.75rem; }
+  .title-tap-hint    { font-size: 0.82rem; }
+}
+
+/* ===== タブレット（481px〜768px）===== */
+@media (min-width: 481px) and (max-width: 768px) {
+  .dex-grid  { grid-template-columns: repeat(3, 1fr); }
+  .hall-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ===== PC（769px以上）===== */
+@media (min-width: 769px) {
+  body { background: #1a100a; }
+
+  .dex-grid  { grid-template-columns: repeat(3, 1fr); }
+  .hall-grid { grid-template-columns: repeat(3, 1fr); }
 }

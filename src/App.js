@@ -6,6 +6,7 @@ import bgmEncounter from './sound/bgm-encounter.mp3';
 import bgmBattle    from './sound/bgm-battle.mp3';
 import bgmRehab     from './sound/bgm-rehab.mp3';
 import bgmFarewell  from './sound/bgm-farewell.mp3';
+import bgmSkill     from './sound/bgm-skill.mp3';
 import bloomImg   from './images/ブルーム.png';
 import lanceImg   from './images/ランス.png';
 import mosImg     from './images/モス.png';
@@ -24,11 +25,13 @@ import lastImg    from './images/ラスト.png';
 import bgTrain from './images/train.png';
 import bgOffice from './images/office.png';
 import bgConvenience from './images/convenience.png';
+import bgIzakaya from './images/izakaya.jpeg';
 
 const LOCATION_BG = {
   train:       bgTrain,
   office:      bgOffice,
   convenience: bgConvenience,
+  izakaya:     bgIzakaya,
 };
 
 // ===== 定数 =====
@@ -131,8 +134,6 @@ function getTier(pct) {
   if (pct <= 60) return 'mid';
   return 'high';
 }
-const PEACE_PER_RELEASE = Math.round(100 / 15);
-
 const rarityLabel = { N: 'ノーマル', R: 'レア', SR: 'スーパーレア', UR: 'ウルトラレア' };
 
 // ===== BGM ファイルマップ =====
@@ -143,6 +144,7 @@ const BGM_SRC = {
   battle:    bgmBattle,
   rehab:     bgmRehab,
   farewell:  bgmFarewell,
+  skill:     bgmSkill,
 };
 
 
@@ -183,6 +185,9 @@ function rollSkillDamage(power) {
   return min + Math.floor(Math.random() * (max - min + 1));
 }
 
+// 技の使用回数上限（小・中は無制限）
+const SKILL_USE_LIMIT = { '大': 3, '特大': 1 };
+
 const EFFECT_LABELS = {
   'sure_hit': '必中',
   'multi':    '連続',
@@ -193,9 +198,9 @@ const EFFECT_LABELS = {
 // ===== 技リスト =====
 const ALL_SKILLS = [
   // 初期技
-  { id: 'spring_breeze',   name: '春風',     type: '笑', power: '中',  effect: null },
-  { id: 'margin',          name: '余白',     type: '無', power: '中',  effect: null },
-  { id: 'direct_words',    name: '直言',     type: '怒', power: '中',  effect: null },
+  { id: 'spring_breeze',   name: '春風',     type: '笑', power: '小',  effect: null },
+  { id: 'margin',          name: '余白',     type: '無', power: '小',  effect: null },
+  { id: 'direct_words',    name: '直言',     type: '怒', power: '小',  effect: null },
   // 習得技
   { id: 'sunlight',        name: '陽だまり', type: '笑', power: '中',  effect: null },
   { id: 'observe',         name: '静観',     type: '無', power: '中',  effect: null },
@@ -597,13 +602,6 @@ function getGaugeGood(dissatisfaction) {
 }
 
 
-function getPeaceStatus(pct) {
-  if (pct <= 20) return { label: '街は混乱しています…', color: '#cc4444' };
-  if (pct <= 50) return { label: '少しずつ平和になってきました', color: '#c8820a' };
-  if (pct <= 80) return { label: '街に笑顔が増えてきました！', color: '#4a9a6a' };
-  return { label: '完全平和！モックゼロの街が実現しました', color: '#2a7ab5' };
-}
-
 // ===== 妖怪画像コンポーネント =====
 function YokaiImage({ yokai, size = 'md', className = '' }) {
   const sizeClass = `yokai-img-${size}`;
@@ -648,25 +646,13 @@ function TitleScreen({ onStart }) {
 }
 
 // ===== ホーム画面 =====
-function HomeScreen({ peace, onSelectLocation, onHallOfFame, onDex, capturedList, onRehab, onDeck }) {
-  const status = getPeaceStatus(peace);
+function HomeScreen({ onSelectLocation, onHallOfFame, onDex, capturedList, onRehab, onDeck }) {
   return (
     <div className="screen home-screen">
       <header className="app-header">
         <h1>モックポコ</h1>
         <p className="app-subtitle">モックを捕まえて、更生させて、街を平和にしよう！</p>
       </header>
-
-      <div className="peace-meter">
-        <div className="peace-header">
-          <span className="peace-title">街の平和度</span>
-          <span className="peace-pct" style={{ color: status.color }}>{peace}%</span>
-        </div>
-        <div className="peace-bar-bg">
-          <div className="peace-bar-fill" style={{ width: `${peace}%` }} />
-        </div>
-        <div className="peace-comment" style={{ color: status.color }}>{status.label}</div>
-      </div>
 
       <div className="home-btn-row">
         {capturedList.length > 0 && (
@@ -1091,22 +1077,38 @@ const YOKAI_SE = {
   },
 };
 
+// 全SE共有のAudioContext（毎回newすると上限6個でBGMに干渉するため）
+let _seCtx = null;
+function getSECtx() {
+  try {
+    if (!_seCtx || _seCtx.state === 'closed') {
+      _seCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (_seCtx.state === 'suspended') {
+      _seCtx.resume().catch(() => {});
+    }
+    return _seCtx;
+  } catch {
+    return null;
+  }
+}
+
 function playYokaiSound(name) {
   const se = YOKAI_SE[name];
   if (!se) return;
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = getSECtx();
+    if (!ctx) return;
     const go = () => se.play(ctx, ctx.currentTime);
     ctx.state === 'suspended' ? ctx.resume().then(go) : go();
-  } catch (e) {
-    // Web Audio API 非対応環境は無視
-  }
+  } catch {}
 }
 
 // ===== 捕獲演出の効果音 =====
 function playCaptureSound(type) {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = getSECtx();
+    if (!ctx) return;
 
     const go = () => {
       const t = ctx.currentTime;
@@ -1160,21 +1162,40 @@ function playCaptureSound(type) {
     };
 
     ctx.state === 'suspended' ? ctx.resume().then(go) : go();
-  } catch (e) {
-    // Web Audio API 非対応環境は無視
-  }
+  } catch {}
+}
+
+const TYPEWRITER_SE_SKIP = new Set(['。', '、', '…', '\n', ' ', '　', '・', '！', '？', '〜']);
+
+function playTypewriterSE() {
+  try {
+    const ctx = getSECtx();
+    if (!ctx) return;
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(900 + Math.random() * 300, ctx.currentTime);
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.008);
+    gain.gain.linearRampToValueAtTime(0,    ctx.currentTime + 0.06);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.06);
+  } catch {}
 }
 
 function DescriptionScene({ yokai, onDone }) {
   const introText = `${yokai.name}が現れた。`;
   const subText   = yokai.subText ?? '';
+  const descText  = yokai.description ?? '';
 
-  const [l1, setL1]                   = useState('');
-  const [l2, setL2]                   = useState('');
-  const [l3Visible, setL3Visible]     = useState(false);
-  const [scenePhase, setScenePhase]   = useState('typing_l1');
-  const [seLabel, setSeLabel]         = useState('');
-  const [seFading, setSeFading]       = useState(false);
+  const [l1, setL1]                 = useState('');
+  const [l2, setL2]                 = useState('');
+  const [l3, setL3]                 = useState('');
+  const [scenePhase, setScenePhase] = useState('typing_l1');
+  const [seLabel, setSeLabel]       = useState('');
+  const [seFading, setSeFading]     = useState(false);
   const ivRef    = useRef(null);
   const timerRef = useRef(null);
 
@@ -1182,7 +1203,7 @@ function DescriptionScene({ yokai, onDone }) {
     // リセット
     setL1('');
     setL2('');
-    setL3Visible(false);
+    setL3('');
     setScenePhase('typing_l1');
     setSeLabel('');
     setSeFading(false);
@@ -1192,6 +1213,7 @@ function DescriptionScene({ yokai, onDone }) {
     ivRef.current = setInterval(() => {
       i1++;
       setL1(introText.slice(0, i1));
+      if (!TYPEWRITER_SE_SKIP.has(introText[i1 - 1])) playTypewriterSE();
       if (i1 >= introText.length) {
         clearInterval(ivRef.current);
         timerRef.current = setTimeout(() => {
@@ -1201,23 +1223,32 @@ function DescriptionScene({ yokai, onDone }) {
           ivRef.current = setInterval(() => {
             i2++;
             setL2(subText.slice(0, i2));
+            if (!TYPEWRITER_SE_SKIP.has(subText[i2 - 1])) playTypewriterSE();
             if (i2 >= subText.length) {
               clearInterval(ivRef.current);
               timerRef.current = setTimeout(() => {
-                // 3行目：寄り添う文言をフェードインで表示
-                setScenePhase('fadein_l3');
-                setL3Visible(true);
-                // フェードイン後に効果音を再生
-                timerRef.current = setTimeout(() => {
-                  playYokaiSound(yokai.name);
-                  const label = YOKAI_SE[yokai.name]?.label ?? '';
-                  if (label) {
-                    setSeLabel(label);
-                    setSeFading(false);
-                    setTimeout(() => setSeFading(true), 800);
+                // 3行目：寄り添う文言をタイプライターで表示
+                setScenePhase('typing_l3');
+                let i3 = 0;
+                ivRef.current = setInterval(() => {
+                  i3++;
+                  setL3(descText.slice(0, i3));
+                  if (!TYPEWRITER_SE_SKIP.has(descText[i3 - 1])) playTypewriterSE();
+                  if (i3 >= descText.length) {
+                    clearInterval(ivRef.current);
+                    // タイプ完了後に効果音を再生
+                    timerRef.current = setTimeout(() => {
+                      playYokaiSound(yokai.name);
+                      const label = YOKAI_SE[yokai.name]?.label ?? '';
+                      if (label) {
+                        setSeLabel(label);
+                        setSeFading(false);
+                        setTimeout(() => setSeFading(true), 800);
+                      }
+                      timerRef.current = setTimeout(() => setScenePhase('fadeout'), 1800);
+                    }, 400);
                   }
-                  timerRef.current = setTimeout(() => setScenePhase('fadeout'), 1800);
-                }, 900);
+                }, TYPEWRITER_SPEED);
               }, 400);
             }
           }, TYPEWRITER_SPEED);
@@ -1261,11 +1292,11 @@ function DescriptionScene({ yokai, onDone }) {
         <p className="description-intro">{l1}</p>
         {/* 2行目：通常サイズ */}
         {l2 && <p className="description-sub">{l2}</p>}
-        {/* 3行目：間を置いてフェードイン */}
-        {l3Visible && (
-          <p className="description-text description-text-fadein">
-            {yokai.description.split('\n').map((line, i) => (
-              <span key={i}>{line}<br /></span>
+        {/* 3行目：タイプライター */}
+        {l3 && (
+          <p className="description-text">
+            {l3.split('\n').map((line, i, arr) => (
+              <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
             ))}
           </p>
         )}
@@ -1325,6 +1356,11 @@ function CaptureScreen({ yokai, location, deck, onCaptured, onBack }) {
   const [resultMsg, setResultMsg]         = useState('');
   const [resultEffect, setResultEffect]   = useState(''); // '' | 'super' | 'normal' | 'weak'
   const [hitType, setHitType]             = useState('');
+  const [skillUseCounts, setSkillUseCounts] = useState(() => {
+    const counts = {};
+    (deck ?? []).forEach(s => { counts[s.id] = 0; });
+    return counts;
+  });
   const timerRef     = useRef(null);
   const sealNextRef  = useRef(false); // 封印: 次ターン特殊状態なし
   const willFleeRef  = useRef(false); // 逃走準備: 次ターン逃走
@@ -1386,6 +1422,11 @@ function CaptureScreen({ yokai, location, deck, onCaptured, onBack }) {
 
   function handleSkillUse(skill) {
     if (phase !== 'skill_choice') return;
+    // 使用回数チェック
+    const limit = SKILL_USE_LIMIT[skill.power];
+    if (limit !== undefined && (skillUseCounts[skill.id] ?? 0) >= limit) return;
+    // 使用回数を消費
+    setSkillUseCounts(prev => ({ ...prev, [skill.id]: (prev[skill.id] ?? 0) + 1 }));
 
     // 逃走準備中に攻撃 → 次ターン逃走（混乱効果で解除可）
     if (specialStatus === 'flee_prep' && skill.effect !== 'confuse') {
@@ -1582,11 +1623,16 @@ function CaptureScreen({ yokai, location, deck, onCaptured, onBack }) {
               {(deck ?? []).map((skill) => {
                 const tm = calcTypeMultiplier(skill.type, yokai.mainType, yokai.subType);
                 const effClass = tm >= 2.0 ? 'skill-eff-super' : tm <= 0.5 ? 'skill-eff-weak' : '';
+                const limit = SKILL_USE_LIMIT[skill.power];
+                const usedCount = skillUseCounts[skill.id] ?? 0;
+                const remaining = limit !== undefined ? limit - usedCount : null;
+                const isExhausted = remaining !== null && remaining <= 0;
                 return (
                   <button
                     key={skill.id}
-                    className={`capture-skill-btn ${effClass}`}
+                    className={`capture-skill-btn ${effClass}${isExhausted ? ' skill-exhausted' : ''}`}
                     onClick={() => handleSkillUse(skill)}
+                    disabled={isExhausted}
                   >
                     <span className="capture-skill-name">{skill.name}</span>
                     <TypeBadge type={skill.type} />
@@ -1594,6 +1640,12 @@ function CaptureScreen({ yokai, location, deck, onCaptured, onBack }) {
                     {skill.effect && (
                       <span className="capture-skill-effect">{EFFECT_LABELS[skill.effect]}</span>
                     )}
+                    {isExhausted
+                      ? <span className="skill-use-count skill-use-exhausted">使用済み</span>
+                      : remaining !== null
+                        ? <span className="skill-use-count">残り{remaining}回</span>
+                        : null
+                    }
                     {tm >= 2.0 && <span className="eff-label eff-super">抜群</span>}
                     {tm <= 0.5 && <span className="eff-label eff-weak">いまいち</span>}
                   </button>
@@ -2041,16 +2093,21 @@ function App() {
   const [pendingLearnedSkill, setPendingLearnedSkill] = useState(null);
 
   // ===== BGM 管理 =====
-  const audioRef      = useRef(null);
-  const currentBGMRef = useRef(null);
-  const isMutedRef    = useRef(localStorage.getItem('bgm_muted') === 'true');
+  const audioRef       = useRef(null);
+  const currentBGMRef  = useRef(null);
+  const isMutedRef     = useRef(localStorage.getItem('bgm_muted') === 'true');
   const [muted, setMuted] = useState(isMutedRef.current);
-  const fadeTimerRef  = useRef(null);
+  const fadeTimerRef   = useRef(null); // フェードアウトタイマー
+  const fadeInTimerRef = useRef(null); // フェードインタイマー（ref管理で確実にクリアできるように）
 
   // フェード付きで新しいBGMを再生する（src: BGM_SRC[key]）
   function playBGM(src) {
     if (currentBGMRef.current === src) return; // 同じBGMは継続
     currentBGMRef.current = src;
+
+    // 進行中のフェードインを停止
+    clearInterval(fadeInTimerRef.current);
+    fadeInTimerRef.current = null;
 
     // 前のBGMをフェードアウトして停止
     const prev = audioRef.current;
@@ -2064,6 +2121,7 @@ function App() {
         prev.volume = Math.max(0, startVol * (1 - step / steps));
         if (step >= steps) {
           clearInterval(fadeTimerRef.current);
+          fadeTimerRef.current = null;
           prev.pause();
         }
       }, 25);
@@ -2080,11 +2138,12 @@ function App() {
 
     let step = 0;
     const steps = 20;
-    const id = setInterval(() => {
+    fadeInTimerRef.current = setInterval(() => {
       step++;
       audio.volume = Math.min(0.3, 0.3 * (step / steps));
       if (step >= steps) {
-        clearInterval(id);
+        clearInterval(fadeInTimerRef.current);
+        fadeInTimerRef.current = null;
         audio.volume = 0.3;
       }
     }, 25);
@@ -2092,6 +2151,8 @@ function App() {
 
   function stopBGM() {
     currentBGMRef.current = null;
+    clearInterval(fadeInTimerRef.current);
+    fadeInTimerRef.current = null;
     const prev = audioRef.current;
     if (!prev) return;
     clearInterval(fadeTimerRef.current);
@@ -2103,10 +2164,30 @@ function App() {
       prev.volume = Math.max(0, startVol * (1 - step / steps));
       if (step >= steps) {
         clearInterval(fadeTimerRef.current);
+        fadeTimerRef.current = null;
         prev.pause();
         if (audioRef.current === prev) audioRef.current = null;
       }
     }, 25);
+  }
+
+  function playBGMOnce(src, volume) {
+    clearInterval(fadeInTimerRef.current);
+    fadeInTimerRef.current = null;
+    currentBGMRef.current = src;
+    const prev = audioRef.current;
+    if (prev) {
+      clearInterval(fadeTimerRef.current);
+      fadeTimerRef.current = null;
+      prev.pause();
+      audioRef.current = null;
+    }
+    if (isMutedRef.current) return;
+    const audio = new Audio(src);
+    audio.loop = false;
+    audio.volume = volume;
+    audioRef.current = audio;
+    audio.play().catch(e => console.log('BGM error:', e));
   }
 
   function toggleMute() {
@@ -2128,8 +2209,6 @@ function App() {
       }
     }
   }
-
-  const peace = Math.min(100, releasedList.length * PEACE_PER_RELEASE);
 
   // タイトル画面タップ → タイトルBGM開始 → ホームへ
   function handleTitleStart() {
@@ -2185,21 +2264,29 @@ function App() {
     // 技習得チェック（50%の確率）
     let learnedSkill = null;
     const skillId = YOKAI_SKILL_MAP[yokai.id];
-    if (skillId && !ownedSkillIds.includes(skillId) && Math.random() < 0.5) { 
+    const rand = Math.random();
+    console.log('[技習得] yokai:', yokai.id, yokai.name);
+    console.log('[技習得] skillId:', skillId ?? 'なし（このモックは技を持たない）');
+    console.log('[技習得] 習得済み:', ownedSkillIds.includes(skillId));
+    console.log('[技習得] rand:', rand.toFixed(3), '→', rand < 0.5 ? '習得判定成功' : '習得判定失敗');
+    if (skillId && !ownedSkillIds.includes(skillId) && rand < 0.5) {
       const skill = ALL_SKILLS.find(s => s.id === skillId);
       if (skill) {
         const newIds = [...ownedSkillIds, skillId];
         setOwnedSkillIds(newIds);
         saveOwnedSkills(newIds);
         learnedSkill = skill;
+        console.log('[技習得] 技を習得！:', skill.name);
       }
     }
 
-    playBGM(BGM_SRC.home);
     if (learnedSkill) {
+      playBGMOnce(BGM_SRC.skill, 0.5);
       setPendingLearnedSkill(learnedSkill);
       setScreen('skill_learned');
     } else {
+      console.log('[技習得] 画面遷移: home（技習得なし）');
+      playBGM(BGM_SRC.home);
       setScreen('home');
     }
   }
@@ -2223,7 +2310,6 @@ function App() {
       )}
       {screen === 'home' && (
         <HomeScreen
-          peace={peace}
           onSelectLocation={handleSelectLocation}
           onHallOfFame={() => { playBGM(BGM_SRC.farewell); setScreen('hall'); }}
           onDex={() => { playBGM(BGM_SRC.home); setScreen('dex'); }}
@@ -2291,7 +2377,7 @@ function App() {
         <SkillLearnedScreen
           yokai={selectedYokai}
           skill={pendingLearnedSkill}
-          onHome={() => { setPendingLearnedSkill(null); setScreen('home'); }}
+          onHome={() => { setPendingLearnedSkill(null); playBGM(BGM_SRC.home); setScreen('home'); }}
         />
       )}
     </div>
