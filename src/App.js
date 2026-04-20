@@ -18,7 +18,7 @@ import elderImg   from './images/エルダー.png';
 import ghostImg   from './images/ゴースト.png';
 import ivyImg     from './images/アイビー.png';
 import hazeImg    from './images/ヘイズ.png';
-import preachImg  from './images/プリーチ.png';
+import preachImg  from './images/プリーチ.jpeg';
 import pennyImg   from './images/ペニー.png';
 import roarImg    from './images/ロアー.png';
 import lastImg    from './images/ラスト.png';
@@ -274,9 +274,48 @@ function saveOwnedSkills(ids) {
   } catch {}
 }
 
+// ===== capturedList の永続化 =====
+function loadCapturedList() {
+  try {
+    const raw = localStorage.getItem('captured_list');
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [];
+}
+function saveCapturedList(list) {
+  try { localStorage.setItem('captured_list', JSON.stringify(list)); } catch {}
+}
+
+// ===== releasedList の永続化 =====
+function loadReleasedList() {
+  try {
+    const raw = localStorage.getItem('released_list');
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [];
+}
+function saveReleasedList(list) {
+  try { localStorage.setItem('released_list', JSON.stringify(list)); } catch {}
+}
+
+// ===== encounteredIds の永続化 =====
+function loadEncounteredIds() {
+  try {
+    const raw = localStorage.getItem('encountered_ids');
+    if (raw) return new Set(JSON.parse(raw));
+  } catch {}
+  return new Set();
+}
+function saveEncounteredIds(ids) {
+  try { localStorage.setItem('encountered_ids', JSON.stringify([...ids])); } catch {}
+}
+
 // 開発用リセット（コンソールから window.resetGame() で呼ぶ）
 window.resetGame = function () {
-  ['owned_skills', 'saved_deck', 'mute', 'data_version'].forEach(k => localStorage.removeItem(k));
+  [
+    'owned_skills', 'saved_deck', 'bgm_muted', 'data_version',
+    'captured_list', 'released_list', 'encountered_ids',
+  ].forEach(k => localStorage.removeItem(k));
   window.location.reload();
 };
 
@@ -2082,15 +2121,35 @@ function DeckBuildingScreen({ ownedSkillIds, onSave, onBack }) {
 
 // ===== App =====
 function App() {
-  const [capturedList, setCapturedList]     = useState([]);
-  const [releasedList, setReleasedList]     = useState([]);
-  const [encounteredIds, setEncounteredIds] = useState(new Set());
+  // localStorageから起動時に復元
+  const [capturedList, setCapturedList]     = useState(() => loadCapturedList());
+  const [releasedList, setReleasedList]     = useState(() => loadReleasedList());
+  const [encounteredIds, setEncounteredIds] = useState(() => loadEncounteredIds());
   const [screen, setScreen]                 = useState('title');
   const [selectedYokai, setSelectedYokai]   = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [ownedSkillIds, setOwnedSkillIds]   = useState(() => loadOwnedSkills());
   const [selectedDeck, setSelectedDeck]     = useState(null);
   const [pendingLearnedSkill, setPendingLearnedSkill] = useState(null);
+
+  // ===== データ変更時に自動保存 =====
+  useEffect(() => { saveCapturedList(capturedList); }, [capturedList]);
+  useEffect(() => { saveReleasedList(releasedList); }, [releasedList]);
+  useEffect(() => { saveEncounteredIds(encounteredIds); }, [encounteredIds]);
+
+  // ===== iOS Safari: 最初のユーザー操作でオーディオを解禁 =====
+  useEffect(() => {
+    const unlock = () => {
+      // Web Audio API コンテキストを resume
+      getSECtx();
+    };
+    document.addEventListener('touchstart', unlock, { once: true, capture: true });
+    document.addEventListener('click',      unlock, { once: true, capture: true });
+    return () => {
+      document.removeEventListener('touchstart', unlock, true);
+      document.removeEventListener('click',      unlock, true);
+    };
+  }, []);
 
   // ===== BGM 管理 =====
   const audioRef       = useRef(null);
@@ -2134,7 +2193,14 @@ function App() {
     audio.loop   = true;
     audio.volume = 0;
     audioRef.current = audio;
-    audio.play().catch(e => console.log('BGM error:', e));
+    audio.play().catch(() => {
+      // iOS Safari: play()失敗時、次のユーザー操作で再試行
+      const retry = () => {
+        if (audioRef.current === audio) audio.play().catch(() => {});
+      };
+      document.addEventListener('touchstart', retry, { once: true, capture: true });
+      document.addEventListener('click',      retry, { once: true, capture: true });
+    });
 
     let step = 0;
     const steps = 20;
@@ -2187,7 +2253,13 @@ function App() {
     audio.loop = false;
     audio.volume = volume;
     audioRef.current = audio;
-    audio.play().catch(e => console.log('BGM error:', e));
+    audio.play().catch(() => {
+      const retry = () => {
+        if (audioRef.current === audio) audio.play().catch(() => {});
+      };
+      document.addEventListener('touchstart', retry, { once: true, capture: true });
+      document.addEventListener('click',      retry, { once: true, capture: true });
+    });
   }
 
   function toggleMute() {
