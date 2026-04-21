@@ -221,6 +221,7 @@ body {
 
 /* ===== 説明シーン ===== */
 .description-scene {
+  position: relative;
   min-height: 100vh;
   background: #2a1a0e;
   display: flex;
@@ -260,6 +261,17 @@ body {
 @keyframes sePopIn {
   from { transform: scale(0.6); opacity: 0; }
   to   { transform: scale(1);   opacity: 1; }
+}
+
+.scene-skip-hint {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  font-size: 0.72rem;
+  color: rgba(245, 228, 192, 0.55);
+  letter-spacing: 0.08em;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* 説明シーン：1行目「〇〇が現れた。」（通常サイズ） */

@@ -22,6 +22,12 @@ import preachImg  from './images/プリーチ.jpeg';
 import pennyImg   from './images/ペニー.png';
 import roarImg    from './images/ロアー.png';
 import lastImg    from './images/ラスト.png';
+import claireImg  from './images/クレア.png';
+import cosmoImg   from './images/コスモ.png';
+import rudeImg    from './images/ルード.png';
+import spreadImg  from './images/スプレッド.png';
+import drakeImg   from './images/ドレイク.png';
+import fluttaImg  from './images/フラッタ.png';
 import bgTrain from './images/train.png';
 import bgOffice from './images/office.png';
 import bgConvenience from './images/convenience.png';
@@ -44,10 +50,10 @@ const ACTION_RECOVERY_MS   = 12 * 60 * 1000; // 12分
 
 // 場所ごとの生息キャラ
 const LOCATION_YOKAI = {
-  train:       ['001', '002', '006', '008', '014'],
-  office:      ['003', '007', '010', '012', '013'],
+  train:       ['001', '002', '006', '008', '014', '019', '021'],
+  office:      ['003', '007', '010', '012', '013', '017', '018', '020'],
   convenience: ['005', '004'],
-  izakaya:     ['011', '010', '015'],
+  izakaya:     ['011', '010', '015', '016', '020'],
 };
 
 const LOCATION_TEXT = {
@@ -591,6 +597,102 @@ const yokaiList = [
       praise: ['え！もっと言ってください！帰れません！', '…嬉しいです。じゃあ次回また来ましょう'],
     },
   },
+  {
+    id: '016', name: 'クレア', feature: '過干渉・モンスターペアレント的にクレームを入れてくる',
+    habitat: '学校・病院・店舗', rarity: 'R', mainType: '怒', subType: '陽',
+    image: claireImg,
+    subText: '過干渉でクレームを入れてくるモックだ。',
+    description: '心配しているのでしょうか。大切に思っているからこそ、なのかもしれません。その気持ち、受け取りました。',
+    weakness: { correct: '話を最後まで聞く', wrong: ['反論する', 'その場を離れる'] },
+    farewell: '…少し、任せることも覚えてみます',
+    affinity: { good: ['talk', 'praise'], bad: 'play', badReaction: '遊んでいる場合ではありません！' },
+    reactions: {
+      talk:   ['聞いてください、これは問題です', '…話を聞いてくれる人がいるんですね'],
+      food:   ['今はそういう場合じゃないんです', '…少し、落ち着きました'],
+      play:   ['遊びなんて、今は無理です！', '…たまには息抜きも必要かもしれない'],
+      praise: ['当然です！', '…ありがとう。少し安心しました'],
+    },
+  },
+  {
+    id: '017', name: 'コスモ', feature: '話が全く噛み合わない・常識が通じない',
+    habitat: '会社・電車', rarity: 'R', mainType: '無', subType: '陰',
+    image: cosmoImg,
+    subText: '話が全く噛み合わないモックだ。',
+    description: '違う世界から来たのでしょうか。きっと一生懸命伝えようとしているのだと思います。',
+    weakness: { correct: 'ゆっくり説明する', wrong: ['急いで話す', '諦める'] },
+    farewell: '…この星のこと、少しわかった気がします',
+    affinity: { good: ['play', 'talk'], bad: 'praise', badReaction: 'ホメルトハ？イミガワカリマセン' },
+    reactions: {
+      talk:   ['ピポパポ…（通じていない）', '…なんとなく、伝わってきた気がします'],
+      food:   ['コレハ何デスカ？', '…食べると、少し言葉がわかります'],
+      play:   ['アソビ！シリマス！', '一緒に遊ぶと話せる気がします'],
+      praise: ['ホメラレタ？ドウイウコト？', '…褒め言葉、覚えました'],
+    },
+  },
+  {
+    id: '018', name: 'ルード', feature: '年上に対してタメ口・舐めた態度をとる',
+    habitat: '会社・飲み会', rarity: 'N', mainType: '笑', subType: '陽',
+    image: rudeImg,
+    subText: '年上に対して舐めた態度をとるモックだ。',
+    description: '緊張しているのでしょうか。うまく距離の取り方がわからないのかもしれません。',
+    weakness: { correct: '同じ目線で話す', wrong: ['注意する', '怒る'] },
+    farewell: '…敬語、練習してみます',
+    affinity: { good: ['play', 'talk'], bad: 'praise', badReaction: 'え〜褒めるとかキモくないっすか' },
+    reactions: {
+      talk:   ['っすね〜（興味なさそう）', '…なんか、話しやすいっすね'],
+      food:   ['あ、食べていいっすか', '…ごちそうさまっす。ありがとう、でした'],
+      play:   ['え、マジで遊ぶっすか！', '楽しかったっす。また遊びたいっす'],
+      praise: ['え〜照れるじゃないっすか', '…ありがとうございます、って言えた'],
+    },
+  },
+  {
+    id: '019', name: 'スプレッド', feature: '電車で大股を広げて座る',
+    habitat: '電車', rarity: 'SR', mainType: '無', subType: '陽',
+    image: spreadImg,
+    subText: '電車で大股を広げて座るモックだ。',
+    description: '疲れているのでしょうか。ゆっくり座りたい気持ち、わかります。少しだけ、詰めてもらえますか。',
+    weakness: { correct: '隣に静かに座る', wrong: ['声をかける', '別の車両に移る'] },
+    farewell: '…足、閉じます',
+    affinity: { good: ['food', 'praise'], bad: 'talk', badReaction: '…（さらに広げる）' },
+    reactions: {
+      talk:   ['…（無言）', '…少し、詰めます'],
+      food:   ['（受け取る）', '…美味しい。ありがとう'],
+      play:   ['…（動じない）', '…（少し楽しそうにする）'],
+      praise: ['…（少し反応）', '…そう言ってもらえると、楽になります'],
+    },
+  },
+  {
+    id: '020', name: 'ドレイク', feature: 'すぐ激怒する・威圧・マウントをとる',
+    habitat: '会社・居酒屋', rarity: 'UR', mainType: '怒', subType: '陽',
+    image: drakeImg,
+    subText: 'すぐ激怒して威圧してくる伝説のモックだ。',
+    description: '何か怖いことがあったのでしょうか。強がっているだけかもしれません。',
+    weakness: { correct: '動じずに話を聞く', wrong: ['言い返す', 'その場から逃げる', '謝り続ける'] },
+    farewell: '…怒らなくても、伝わるんだな',
+    affinity: { good: ['praise', 'talk'], bad: 'play', badReaction: '遊ぶ気分じゃねえ！！' },
+    reactions: {
+      talk:   ['あ？何が言いたいんだ！', '…（少し静かになる）そうか'],
+      food:   ['食いもので機嫌取ろうとしてるのか！', '…（食べながら）…うまいな'],
+      play:   ['俺に遊べってか！ふざけんな！', '…（意外と楽しそうにする）'],
+      praise: ['当然だろ！', '…（黙る）…ありがとう、だ'],
+    },
+  },
+  {
+    id: '021', name: 'フラッタ', feature: 'せっかちで話を最後まで聞かない・先を急かす',
+    habitat: '職場・駅', rarity: 'R', mainType: '笑', subType: '陰',
+    image: fluttaImg,
+    subText: 'せっかちで話を最後まで聞かないモックだ。',
+    description: '急いでいるのでしょうか。時間が足りないのかもしれません。大丈夫、ちゃんと間に合いますよ。',
+    weakness: { correct: '結論から話す', wrong: ['ゆっくり話す', '怒る'] },
+    farewell: '…最後まで聞く、やってみます',
+    affinity: { good: ['talk', 'play'], bad: 'food', badReaction: '食べてる時間ないです！' },
+    reactions: {
+      talk:   ['で、結論は？（話を遮る）', '…聞いてみると、大事なこと言ってましたね'],
+      food:   ['食べてる時間ないです！', '…（急いで食べながら）美味しい、確かに'],
+      play:   ['はやく！なにして遊ぶの！', '…急がなくていい遊び、いいですね'],
+      praise: ['ありがとう！で、次は？', '…ゆっくり受け取ってみます'],
+    },
+  },
 ];
 
 // ===== ユーティリティ =====
@@ -770,11 +872,28 @@ function locationIcon(key) {
   return icons[key] || '📍';
 }
 
+// レアリティ別遭遇重み
+const RARITY_WEIGHT = { N: 70, R: 22, SR: 6, UR: 2 };
+
+function rollWeightedYokai(location) {
+  const ids = LOCATION_YOKAI[location];
+  const entries = ids.map(id => {
+    const y = yokaiList.find(y => y.id === id);
+    return { id, weight: RARITY_WEIGHT[y?.rarity] ?? 1 };
+  });
+  const total = entries.reduce((s, e) => s + e.weight, 0);
+  let r = Math.random() * total;
+  for (const e of entries) {
+    r -= e.weight;
+    if (r <= 0) return e.id;
+  }
+  return entries[entries.length - 1].id;
+}
+
 // ===== 場所演出画面 =====
 function LocationAtmosphereScreen({ location, onEncounter, onBack }) {
   function handleTap() {
-    const yokaiIds = LOCATION_YOKAI[location];
-    const randomId = yokaiIds[Math.floor(Math.random() * yokaiIds.length)];
+    const randomId = rollWeightedYokai(location);
     const yokai = yokaiList.find(y => y.id === randomId);
     onEncounter(yokai);
   }
@@ -1114,6 +1233,123 @@ const YOKAI_SE = {
       o2.start(t + 0.05); o2.stop(t + 0.35);
     },
   },
+  // クレア：クレームです！（強めの主張音 – 低域から中域へ急上昇するアタック）
+  'クレア': {
+    label: 'クレームです！',
+    play(ctx, t) {
+      const o = ctx.createOscillator(); o.type = 'sawtooth';
+      o.frequency.setValueAtTime(220, t);
+      o.frequency.linearRampToValueAtTime(380, t + 0.08);
+      o.frequency.setValueAtTime(320, t + 0.2);
+      o.frequency.linearRampToValueAtTime(280, t + 0.5);
+      const flt = ctx.createBiquadFilter(); flt.type = 'bandpass'; flt.frequency.value = 900; flt.Q.value = 2;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.45, t + 0.04);
+      g.gain.setValueAtTime(0.4, t + 0.15);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+      o.connect(flt); flt.connect(g); g.connect(ctx.destination);
+      o.start(t); o.stop(t + 0.55);
+    },
+  },
+  // コスモ：ピポパポ…（宇宙人風電子音 – 3音のチープなビープ）
+  'コスモ': {
+    label: 'ピポパポ…',
+    play(ctx, t) {
+      [[0, 880], [0.18, 660], [0.36, 1100]].forEach(([delay, freq]) => {
+        const o = ctx.createOscillator(); o.type = 'square';
+        o.frequency.setValueAtTime(freq, t + delay);
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.12, t + delay);
+        g.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.14);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(t + delay); o.stop(t + delay + 0.15);
+      });
+    },
+  },
+  // ルード：っすね〜（ゆるい上昇音 – 少しだらけた感じの正弦波）
+  'ルード': {
+    label: 'っすね〜',
+    play(ctx, t) {
+      const o = ctx.createOscillator(); o.type = 'sine';
+      o.frequency.setValueAtTime(280, t);
+      o.frequency.linearRampToValueAtTime(340, t + 0.3);
+      o.frequency.linearRampToValueAtTime(300, t + 0.6);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.22, t + 0.06);
+      g.gain.setValueAtTime(0.18, t + 0.4);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t); o.stop(t + 0.65);
+    },
+  },
+  // スプレッド：ドカッ…（重くどっしりした音 – 低域インパクト）
+  'スプレッド': {
+    label: 'ドカッ…',
+    play(ctx, t) {
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.5, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2);
+      const src = ctx.createBufferSource(); src.buffer = buf;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 120;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(1.5, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+      src.connect(lp); lp.connect(g); g.connect(ctx.destination);
+      src.start(t);
+      // 余韻のドーン
+      const o = ctx.createOscillator(); o.type = 'sine';
+      o.frequency.setValueAtTime(80, t);
+      o.frequency.exponentialRampToValueAtTime(40, t + 0.35);
+      const g2 = ctx.createGain();
+      g2.gain.setValueAtTime(0.5, t);
+      g2.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+      o.connect(g2); g2.connect(ctx.destination);
+      o.start(t); o.stop(t + 0.4);
+    },
+  },
+  // ドレイク：ガオォォ！（迫力ある咆哮音 – 歪みのあるロー〜ミッドの咆哮）
+  'ドレイク': {
+    label: 'ガオォォ！',
+    play(ctx, t) {
+      const o = ctx.createOscillator(); o.type = 'sawtooth';
+      o.frequency.setValueAtTime(100, t);
+      o.frequency.linearRampToValueAtTime(200, t + 0.15);
+      o.frequency.linearRampToValueAtTime(140, t + 0.6);
+      const dist = ctx.createWaveShaper();
+      const curve = new Float32Array(256);
+      for (let i = 0; i < 256; i++) {
+        const x = (i * 2) / 256 - 1;
+        curve[i] = (Math.PI + 400) * x / (Math.PI + 400 * Math.abs(x));
+      }
+      dist.curve = curve;
+      const flt = ctx.createBiquadFilter(); flt.type = 'bandpass'; flt.frequency.value = 500; flt.Q.value = 1.5;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.55, t + 0.06);
+      g.gain.setValueAtTime(0.5, t + 0.4);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.75);
+      o.connect(dist); dist.connect(flt); flt.connect(g); g.connect(ctx.destination);
+      o.start(t); o.stop(t + 0.75);
+    },
+  },
+  // フラッタ：はやくはやく！（急かすような上昇音 – 2連の素早い上昇ビープ）
+  'フラッタ': {
+    label: 'はやくはやく！',
+    play(ctx, t) {
+      [[0, 600, 900], [0.2, 700, 1050]].forEach(([delay, f1, f2]) => {
+        const o = ctx.createOscillator(); o.type = 'triangle';
+        o.frequency.setValueAtTime(f1, t + delay);
+        o.frequency.linearRampToValueAtTime(f2, t + delay + 0.12);
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.18, t + delay);
+        g.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.14);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(t + delay); o.stop(t + delay + 0.15);
+      });
+    },
+  },
 };
 
 // 全SE共有のAudioContext（毎回newすると上限6個でBGMに干渉するため）
@@ -1235,8 +1471,22 @@ function DescriptionScene({ yokai, onDone }) {
   const [scenePhase, setScenePhase] = useState('typing_l1');
   const [seLabel, setSeLabel]       = useState('');
   const [seFading, setSeFading]     = useState(false);
-  const ivRef    = useRef(null);
-  const timerRef = useRef(null);
+  const ivRef      = useRef(null);
+  const timerRef   = useRef(null);
+  const skippedRef = useRef(false);
+
+  function handleSkip() {
+    if (skippedRef.current) return;
+    if (scenePhase === 'phrase') return;
+    skippedRef.current = true;
+    clearInterval(ivRef.current);
+    clearTimeout(timerRef.current);
+    setL1(introText);
+    setL2(subText);
+    setL3(descText);
+    setSeLabel('');
+    setScenePhase('phrase');
+  }
 
   useEffect(() => {
     // リセット
@@ -1325,7 +1575,11 @@ function DescriptionScene({ yokai, onDone }) {
   }
 
   return (
-    <div className={`description-scene ${scenePhase === 'fadeout' ? 'fadeout' : ''}`}>
+    <div
+      className={`description-scene ${scenePhase === 'fadeout' ? 'fadeout' : ''}`}
+      onClick={handleSkip}
+      style={{ cursor: 'pointer' }}
+    >
       <div className="description-box">
         {/* 1行目：大きめフォント */}
         <p className="description-intro">{l1}</p>
@@ -1345,6 +1599,7 @@ function DescriptionScene({ yokai, onDone }) {
           {seLabel}
         </p>
       )}
+      <span className="scene-skip-hint">スキップ</span>
     </div>
   );
 }
