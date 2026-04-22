@@ -1667,6 +1667,7 @@ body {
   align-items: center;
   gap: 4px;
   border: 1.5px solid transparent;
+  min-height: 260px;
 }
 
 .dex-card.rarity-R  { border-color: var(--rarity-r); }
@@ -1709,10 +1710,35 @@ body {
 .dex-card.rarity-SR .dex-card-rarity { color: var(--rarity-sr); }
 .dex-card.rarity-UR .dex-card-rarity { color: var(--rarity-ur); }
 
+/* タイプバッジ */
+.dex-card-types {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 2px 0;
+}
+
+.dex-type-badge {
+  font-size: 0.65rem;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 20px;
+  color: #fff;
+  letter-spacing: 0.04em;
+}
+
+.dex-type-main-笑 { background: #E8874A; }
+.dex-type-main-無 { background: #888888; }
+.dex-type-main-怒 { background: #cc4444; }
+.dex-type-sub-陽  { background: #c8820a; }
+.dex-type-sub-陰  { background: #7b52ab; }
+
 /* 未捕獲カード */
 .dex-card-unknown {
   background: #2a2a2a;
   border-color: #444 !important;
+  justify-content: center;
 }
 
 .dex-card-unknown .dex-card-no {
@@ -1720,14 +1746,14 @@ body {
 }
 
 .dex-card-silhouette {
-  width: 56px;
-  height: 56px;
+  width: 80px;
+  height: 80px;
   background: #111;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.6rem;
+  font-size: 2rem;
   color: #333;
   margin: 4px 0;
   filter: blur(1px);

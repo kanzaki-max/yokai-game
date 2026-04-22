@@ -898,6 +898,10 @@ function YokaiDexScreen({ encounteredIds, onBack }) {
                 <>
                   <YokaiImage yokai={yokai} size="sm" />
                   <div className="dex-card-name">{yokai.name}</div>
+                  <div className="dex-card-types">
+                    <span className={`dex-type-badge dex-type-main-${yokai.mainType}`}>{yokai.mainType}</span>
+                    <span className={`dex-type-badge dex-type-sub-${yokai.subType}`}>{yokai.subType}</span>
+                  </div>
                   <div className="dex-card-feature">{yokai.feature}</div>
                   <div className="dex-card-habitat">生息地：{yokai.habitat}</div>
                   <div className="dex-card-rarity">{rarityLabel[yokai.rarity]}</div>
