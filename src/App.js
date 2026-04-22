@@ -153,6 +153,18 @@ const BGM_SRC = {
   skill:     bgmSkill,
 };
 
+// ===== BGM モジュールレベル管理 =====
+let _bgmMuted       = localStorage.getItem('bgm_muted') === 'true';
+let _bgmAudio       = null;
+let _bgmCurrentSrc  = null;
+let _bgmFadeTimer   = null;
+
+function _stopBGM() {
+  if (_bgmFadeTimer) { clearInterval(_bgmFadeTimer); _bgmFadeTimer = null; }
+  if (_bgmAudio)     { _bgmAudio.pause(); _bgmAudio = null; }
+  _bgmCurrentSrc = null;
+}
+
 
 // ===== タイプシステム =====
 // 三すくみ: 笑→無×2, 無→怒×2, 怒→笑×2（逆は×0.5）
@@ -222,6 +234,13 @@ const ALL_SKILLS = [
   { id: 'silent_pressure', name: '無音の圧', type: '無', power: '特大', effect: 'sure_hit' },
   { id: 'settlement',      name: '清算',     type: '怒', power: '大',  effect: 'sure_hit' },
   { id: 'night_curtain',   name: '夜の帳',   type: '怒', power: '特大', effect: 'seal' },
+  // 新キャラ習得技
+  { id: 'petition',        name: '陳情',     type: '怒', power: '大',  effect: null },
+  { id: 'dimension',       name: '異次元',   type: '無', power: '中',  effect: 'confuse' },
+  { id: 'keigo',           name: '敬語返し', type: '笑', power: '中',  effect: null },
+  { id: 'occupy',          name: '占有',     type: '無', power: '大',  effect: 'seal' },
+  { id: 'roar_howl',       name: '咆哮',     type: '怒', power: '特大', effect: 'sure_hit' },
+  { id: 'foresee',         name: '先読み',   type: '笑', power: '中',  effect: 'seal' },
 ];
 
 const INITIAL_SKILL_IDS = ['spring_breeze', 'margin', 'direct_words'];
@@ -242,6 +261,12 @@ const YOKAI_SKILL_MAP = {
   '014': 'silent_pressure',
   '011': 'settlement',
   '015': 'night_curtain',
+  '016': 'petition',
+  '017': 'dimension',
+  '018': 'keigo',
+  '019': 'occupy',
+  '020': 'roar_howl',
+  '021': 'foresee',
 };
 
 // ===== 技のlocalStorage =====
@@ -322,6 +347,10 @@ window.resetGame = function () {
     'owned_skills', 'saved_deck', 'bgm_muted', 'data_version',
     'captured_list', 'released_list', 'encountered_ids',
   ].forEach(k => localStorage.removeItem(k));
+  // rehab_actions_*, rehab_gauge_* を一括削除
+  Object.keys(localStorage)
+    .filter(k => k.startsWith('rehab_'))
+    .forEach(k => localStorage.removeItem(k));
   window.location.reload();
 };
 
@@ -713,6 +742,26 @@ function saveActionData(captureId, data) {
 function clearActionData(captureId) {
   try {
     localStorage.removeItem(`rehab_actions_${captureId}`);
+  } catch {}
+}
+
+function loadRehabProgress(captureId) {
+  try {
+    const raw = localStorage.getItem(`rehab_gauge_${captureId}`);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return { gauge: 0, dissatisfaction: 0 };
+}
+
+function saveRehabProgress(captureId, gauge, dissatisfaction) {
+  try {
+    localStorage.setItem(`rehab_gauge_${captureId}`, JSON.stringify({ gauge, dissatisfaction }));
+  } catch {}
+}
+
+function clearRehabProgress(captureId) {
+  try {
+    localStorage.removeItem(`rehab_gauge_${captureId}`);
   } catch {}
 }
 
@@ -2010,8 +2059,10 @@ function RehabListScreen({ capturedList, onSelect, onBack }) {
 }
 
 function RehabScreen({ yokai, onReleased, onBack }) {
-  const [gauge, setGauge]                     = useState(0);
-  const [dissatisfaction, setDissatisfaction] = useState(0);
+  const captureId = yokai.captureId;
+
+  const [gauge, setGauge]                     = useState(() => loadRehabProgress(captureId).gauge);
+  const [dissatisfaction, setDissatisfaction] = useState(() => loadRehabProgress(captureId).dissatisfaction);
   const [currentState, setCurrentState]       = useState(() => pickState());
   const [reaction, setReaction]               = useState('');
   const [reactionKey, setReactionKey]         = useState(0);
@@ -2022,11 +2073,15 @@ function RehabScreen({ yokai, onReleased, onBack }) {
   // 解放アニメーション（キャラが飛び上がって消える）
   const [isReleasing, setIsReleasing]         = useState(false);
 
-  const captureId = yokai.captureId;
   const [actionData, setActionData] = useState(() =>
     recoverActions(loadActionData(captureId))
   );
   const [tickNow, setTickNow] = useState(Date.now);
+
+  // 更生度・不満度が変わるたびに保存
+  useEffect(() => {
+    saveRehabProgress(captureId, gauge, dissatisfaction);
+  }, [captureId, gauge, dissatisfaction]);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -2106,6 +2161,7 @@ function RehabScreen({ yokai, onReleased, onBack }) {
 
   function handleRelease() {
     clearActionData(captureId);
+    clearRehabProgress(captureId);
     setIsReleasing(true);
     setTimeout(() => {
       setReleased(true);
@@ -2407,131 +2463,53 @@ function App() {
   }, []);
 
   // ===== BGM 管理 =====
-  const audioRef       = useRef(null);
-  const currentBGMRef  = useRef(null);
-  const isMutedRef     = useRef(localStorage.getItem('bgm_muted') === 'true');
-  const [muted, setMuted] = useState(isMutedRef.current);
-  const fadeTimerRef   = useRef(null); // フェードアウトタイマー
-  const fadeInTimerRef = useRef(null); // フェードインタイマー（ref管理で確実にクリアできるように）
+  const [muted, setMuted] = useState(_bgmMuted);
 
-  // フェード付きで新しいBGMを再生する（src: BGM_SRC[key]）
   function playBGM(src) {
-    if (currentBGMRef.current === src) return; // 同じBGMは継続
-    currentBGMRef.current = src;
-
-    // 進行中のフェードインを停止
-    clearInterval(fadeInTimerRef.current);
-    fadeInTimerRef.current = null;
-
-    // 前のBGMをフェードアウトして停止
-    const prev = audioRef.current;
-    if (prev) {
-      clearInterval(fadeTimerRef.current);
-      const startVol = prev.volume;
-      const steps = 20;
-      let step = 0;
-      fadeTimerRef.current = setInterval(() => {
-        step++;
-        prev.volume = Math.max(0, startVol * (1 - step / steps));
-        if (step >= steps) {
-          clearInterval(fadeTimerRef.current);
-          fadeTimerRef.current = null;
-          prev.pause();
-        }
-      }, 25);
-    }
-
-    if (isMutedRef.current) return;
-
-    // 新しいBGMをフェードイン
+    if (_bgmCurrentSrc === src) return;
+    _stopBGM();
+    _bgmCurrentSrc = src;
+    if (_bgmMuted) return;
     const audio = new Audio(src);
     audio.loop   = true;
-    audio.volume = 0;
-    audioRef.current = audio;
+    audio.volume = 0.3;
     audio.play().catch(() => {
-      // iOS Safari: play()失敗時、次のユーザー操作で再試行
-      const retry = () => {
-        if (audioRef.current === audio) audio.play().catch(() => {});
-      };
+      const retry = () => { if (_bgmAudio === audio) audio.play().catch(() => {}); };
       document.addEventListener('touchstart', retry, { once: true, capture: true });
       document.addEventListener('click',      retry, { once: true, capture: true });
     });
-
-    let step = 0;
-    const steps = 20;
-    fadeInTimerRef.current = setInterval(() => {
-      step++;
-      audio.volume = Math.min(0.3, 0.3 * (step / steps));
-      if (step >= steps) {
-        clearInterval(fadeInTimerRef.current);
-        fadeInTimerRef.current = null;
-        audio.volume = 0.3;
-      }
-    }, 25);
+    _bgmAudio = audio;
   }
 
   function stopBGM() {
-    currentBGMRef.current = null;
-    clearInterval(fadeInTimerRef.current);
-    fadeInTimerRef.current = null;
-    const prev = audioRef.current;
-    if (!prev) return;
-    clearInterval(fadeTimerRef.current);
-    const startVol = prev.volume;
-    const steps = 20;
-    let step = 0;
-    fadeTimerRef.current = setInterval(() => {
-      step++;
-      prev.volume = Math.max(0, startVol * (1 - step / steps));
-      if (step >= steps) {
-        clearInterval(fadeTimerRef.current);
-        fadeTimerRef.current = null;
-        prev.pause();
-        if (audioRef.current === prev) audioRef.current = null;
-      }
-    }, 25);
+    _stopBGM();
   }
 
   function playBGMOnce(src, volume) {
-    clearInterval(fadeInTimerRef.current);
-    fadeInTimerRef.current = null;
-    currentBGMRef.current = src;
-    const prev = audioRef.current;
-    if (prev) {
-      clearInterval(fadeTimerRef.current);
-      fadeTimerRef.current = null;
-      prev.pause();
-      audioRef.current = null;
-    }
-    if (isMutedRef.current) return;
+    _stopBGM();
+    _bgmCurrentSrc = src;
+    if (_bgmMuted) return;
     const audio = new Audio(src);
-    audio.loop = false;
-    audio.volume = volume;
-    audioRef.current = audio;
+    audio.loop   = false;
+    audio.volume = volume ?? 0.5;
     audio.play().catch(() => {
-      const retry = () => {
-        if (audioRef.current === audio) audio.play().catch(() => {});
-      };
+      const retry = () => { if (_bgmAudio === audio) audio.play().catch(() => {}); };
       document.addEventListener('touchstart', retry, { once: true, capture: true });
       document.addEventListener('click',      retry, { once: true, capture: true });
     });
+    _bgmAudio = audio;
   }
 
   function toggleMute() {
-    const next = !isMutedRef.current;
-    isMutedRef.current = next;
-    setMuted(next);
-    localStorage.setItem('bgm_muted', next);
-    if (next) {
-      // ミュートON → 再生中のBGMを停止
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
+    _bgmMuted = !_bgmMuted;
+    setMuted(_bgmMuted);
+    localStorage.setItem('bgm_muted', _bgmMuted);
+    if (_bgmMuted) {
+      if (_bgmAudio) { _bgmAudio.pause(); _bgmAudio = null; }
     } else {
-      // ミュートOFF → 現在の画面のBGMを再開
-      if (currentBGMRef.current) {
-        const src = currentBGMRef.current;
-        currentBGMRef.current = null; // 強制再生させるためにリセット
+      if (_bgmCurrentSrc) {
+        const src = _bgmCurrentSrc;
+        _bgmCurrentSrc = null;
         playBGM(src);
       }
     }
@@ -2591,19 +2569,13 @@ function App() {
     // 技習得チェック（50%の確率）
     let learnedSkill = null;
     const skillId = YOKAI_SKILL_MAP[yokai.id];
-    const rand = Math.random();
-    console.log('[技習得] yokai:', yokai.id, yokai.name);
-    console.log('[技習得] skillId:', skillId ?? 'なし（このモックは技を持たない）');
-    console.log('[技習得] 習得済み:', ownedSkillIds.includes(skillId));
-    console.log('[技習得] rand:', rand.toFixed(3), '→', rand < 0.5 ? '習得判定成功' : '習得判定失敗');
-    if (skillId && !ownedSkillIds.includes(skillId) && rand < 0.5) {
+    if (skillId && !ownedSkillIds.includes(skillId) && Math.random() < 0.5) {
       const skill = ALL_SKILLS.find(s => s.id === skillId);
       if (skill) {
         const newIds = [...ownedSkillIds, skillId];
         setOwnedSkillIds(newIds);
         saveOwnedSkills(newIds);
         learnedSkill = skill;
-        console.log('[技習得] 技を習得！:', skill.name);
       }
     }
 
@@ -2612,7 +2584,6 @@ function App() {
       setPendingLearnedSkill(learnedSkill);
       setScreen('skill_learned');
     } else {
-      console.log('[技習得] 画面遷移: home（技習得なし）');
       playBGM(BGM_SRC.home);
       setScreen('home');
     }
