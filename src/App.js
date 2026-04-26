@@ -42,7 +42,6 @@ const LOCATION_BG = {
 
 // ===== 定数 =====
 const GAUGE_CAP        = { N: 100, R: 160, SR: 240, UR: 360 };
-const CAPTURE_TURNS    = { N: 10, R: 7, SR: 3 }; // UR はランダム（1〜3）
 const DISSATISFACTION_UP   = { N: 20, R: 35, SR: 50, UR: 70 };
 const DISSATISFACTION_DOWN = 10;
 const ACTION_MAX           = 5;
@@ -168,19 +167,15 @@ function _stopBGM() {
 
 // ===== タイプシステム =====
 // 三すくみ: 笑→無×2, 無→怒×2, 怒→笑×2（逆は×0.5）
-const MAIN_TYPE_CHART = {
-  '笑': { '笑': 1.0, '無': 2.0, '怒': 0.5 },
-  '無': { '無': 1.0, '怒': 2.0, '笑': 0.5 },
-  '怒': { '怒': 1.0, '笑': 2.0, '無': 0.5 },
+// 対立: 陽→陰×1.5, 陰→陽×1.5
+// 笑/無/怒 vs 陽/陰: ×1.0
+const TYPE_CHART = {
+  '笑': { '笑': 1.0, '無': 2.0, '怒': 0.5, '陽': 1.0, '陰': 1.0 },
+  '無': { '笑': 0.5, '無': 1.0, '怒': 2.0, '陽': 1.0, '陰': 1.0 },
+  '怒': { '笑': 2.0, '無': 0.5, '怒': 1.0, '陽': 1.0, '陰': 1.0 },
+  '陽': { '笑': 1.0, '無': 1.0, '怒': 1.0, '陽': 1.0, '陰': 1.5 },
+  '陰': { '笑': 1.0, '無': 1.0, '怒': 1.0, '陽': 1.5, '陰': 1.0 },
 };
-
-function calcTypeMultiplier(skillType, yokaiMainType, yokaiSubType) {
-  let m = MAIN_TYPE_CHART[skillType]?.[yokaiMainType] ?? 1.0;
-  // 対立ペア: 陽キャラ×陰技 or 陰キャラ×陽技 → ×1.5
-  if (yokaiSubType === '陽' && skillType === '陰') m *= 1.5;
-  if (yokaiSubType === '陰' && skillType === '陽') m *= 1.5;
-  return m;
-}
 
 const TYPE_COLOR = {
   '笑': '#E8874A',
@@ -189,22 +184,6 @@ const TYPE_COLOR = {
   '陽': '#c8820a',
   '陰': '#7b52ab',
 };
-
-// 技のベースダメージ範囲
-const SKILL_POWER_BASE = {
-  '小':   [5,  8],
-  '中':   [10, 15],
-  '大':   [18, 25],
-  '特大': [28, 35],
-};
-
-function rollSkillDamage(power) {
-  const [min, max] = SKILL_POWER_BASE[power] ?? [15, 25];
-  return min + Math.floor(Math.random() * (max - min + 1));
-}
-
-// 技の使用回数上限（小・中は無制限）
-const SKILL_USE_LIMIT = { '大': 3, '特大': 1 };
 
 const EFFECT_LABELS = {
   'sure_hit': '必中',
@@ -222,17 +201,18 @@ const ALL_SKILLS = [
   // 習得技
   { id: 'sunlight',        name: '陽だまり', type: '笑', power: '中',  effect: null },
   { id: 'observe',         name: '静観',     type: '無', power: '中',  effect: null },
-  { id: 'proper_path',     name: '正道',     type: '怒', power: '中',  effect: null },
-  { id: 'tone',            name: '音色',     type: '笑', power: '中',  effect: null },
-  { id: 'listen',          name: '傾聴',     type: '笑', power: '中',  effect: 'confuse' },
   { id: 'dialogue',        name: '問答',     type: '怒', power: '大',  effect: null },
-  { id: 'first_move',      name: '先手',     type: '笑', power: '中',  effect: 'seal' },
-  { id: 'response',        name: '応答',     type: '無', power: '大',  effect: 'confuse' },
-  { id: 'awakening',       name: '覚醒',     type: '無', power: '中',  effect: 'sure_hit' },
+  { id: 'rock_cave',       name: '岩戸',     type: '無', power: '大',  effect: null },
+  { id: 'tone',            name: '音色',     type: '笑', power: '中',  effect: null },
+  { id: 'proper_path',     name: '正道',     type: '怒', power: '中',  effect: null },
+  { id: 'awakening',       name: '覚醒',     type: '陰', power: '中',  effect: 'sure_hit' },
   { id: 'wind_pattern',    name: '風紋',     type: '怒', power: '小',  effect: 'multi' },
+  { id: 'first_move',      name: '先手',     type: '笑', power: '中',  effect: 'seal' },
+  { id: 'listen',          name: '傾聴',     type: '笑', power: '中',  effect: 'confuse' },
+  { id: 'settlement',      name: '清算',     type: '怒', power: '大',  effect: 'sure_hit' },
+  { id: 'response',        name: '応答',     type: '無', power: '大',  effect: 'confuse' },
   { id: 'proof',           name: '証明',     type: '怒', power: '大',  effect: 'seal' },
   { id: 'silent_pressure', name: '無音の圧', type: '無', power: '特大', effect: 'sure_hit' },
-  { id: 'settlement',      name: '清算',     type: '怒', power: '大',  effect: 'sure_hit' },
   { id: 'night_curtain',   name: '夜の帳',   type: '怒', power: '特大', effect: 'seal' },
   // 新キャラ習得技
   { id: 'petition',        name: '陳情',     type: '怒', power: '大',  effect: null },
@@ -240,7 +220,7 @@ const ALL_SKILLS = [
   { id: 'keigo',           name: '敬語返し', type: '笑', power: '中',  effect: null },
   { id: 'occupy',          name: '占有',     type: '無', power: '大',  effect: 'seal' },
   { id: 'roar_howl',       name: '咆哮',     type: '怒', power: '特大', effect: 'sure_hit' },
-  { id: 'foresee',         name: '先読み',   type: '笑', power: '中',  effect: 'seal' },
+  { id: 'foresee',         name: '先読み',   type: '陽', power: '中',  effect: 'seal' },
 ];
 
 const INITIAL_SKILL_IDS = ['spring_breeze', 'margin', 'direct_words'];
@@ -249,17 +229,18 @@ const INITIAL_SKILL_IDS = ['spring_breeze', 'margin', 'direct_words'];
 const YOKAI_SKILL_MAP = {
   '001': 'sunlight',
   '002': 'observe',
-  '007': 'proper_path',
-  '006': 'tone',
-  '010': 'listen',
   '003': 'dialogue',
+  '004': 'rock_cave',
   '005': 'first_move',
-  '012': 'response',
+  '006': 'tone',
+  '007': 'proper_path',
   '008': 'awakening',
   '009': 'wind_pattern',
+  '010': 'listen',
+  '011': 'settlement',
+  '012': 'response',
   '013': 'proof',
   '014': 'silent_pressure',
-  '011': 'settlement',
   '015': 'night_curtain',
   '016': 'petition',
   '017': 'dimension',
@@ -375,7 +356,7 @@ function saveDeckToStorage(ids) {
 const yokaiList = [
   {
     id: '001', name: 'モス', feature: '電車でもたれかかってくる', image: mosImg,
-    habitat: '朝の満員電車', rarity: 'N', mainType: '無', subType: '陰',
+    habitat: '朝の満員電車', rarity: 'N', type: '無',
     subText: '電車でもたれかかってくるモックだ。',
     description: '疲れてしまっているのでしょうか。\nお疲れ様です。私の肩でゆっくりしていて下さい。',
     weakness: { correct: 'じっと見つめる', wrong: ['その場を離れる', '声をかける'] },
@@ -393,7 +374,7 @@ const yokaiList = [
   },
   {
     id: '002', name: 'アイリス', feature: '電車を降りるときにどかない', image: irisImg,
-    habitat: '夕方の急行', rarity: 'N', mainType: '無', subType: '陰',
+    habitat: '夕方の急行', rarity: 'N', type: '無',
     subText: '電車を降りるときに全くどかないモックだ。',
     description: '動きたくない気持ち、よくわかります。\n面倒ですもんね。\nちょっと後ろ失礼しますね。',
     weakness: { correct: '「すみません」と声をかける', wrong: ['じっと見つめる', '先に降りる'] },
@@ -411,7 +392,7 @@ const yokaiList = [
   },
   {
     id: '003', name: 'セージ', feature: '昔の武勇伝を繰り返し語る', image: sageImg,
-    habitat: '会社の飲み会', rarity: 'R', mainType: '怒', subType: '陽',
+    habitat: '会社の飲み会', rarity: 'R', type: '怒',
     subText: '昔の武勇伝を繰り返し語るモックだ。',
     description: '昔の話を聞いてほしいのでしょう。\nあなたの話、ちゃんと聞かせてください。\nへ〜、そんなことがあったんですね。',
     weakness: { correct: '話を遮る', wrong: ['うなずき続ける', 'その場を離れる', '声を荒げる'] },
@@ -429,7 +410,7 @@ const yokaiList = [
   },
   {
     id: '004', name: 'ラッシュ', feature: '歩いていて全くどかない', image: rushImg,
-    habitat: '駅の通路', rarity: 'N', mainType: '無', subType: '陽',
+    habitat: '駅の通路', rarity: 'N', type: '陽',
     subText: '歩いていて全くどかないモックだ。',
     description: '真っすぐ進みたい気持ち、まっすぐですね。\n少しだけ、道を分かち合いましょう。',
     weakness: { correct: '絶対に動かない', wrong: ['大きく避ける', '立ち止まる'] },
@@ -447,7 +428,7 @@ const yokaiList = [
   },
   {
     id: '005', name: 'スリップ', feature: 'レジや改札で平然と割り込む', image: slipImg,
-    habitat: 'コンビニ・駅', rarity: 'N', mainType: '笑', subType: '陰',
+    habitat: 'コンビニ・駅', rarity: 'N', type: '陰',
     subText: 'レジや改札で平然と割り込むモックだ。',
     description: '急いでいるのでしょうか。\n影が薄くてすみません。\nここにいますよ。気づいてくれると嬉しいです。',
     weakness: { correct: '先に並ぶ', wrong: ['声をかける', '見て見ぬふりをする'] },
@@ -465,7 +446,7 @@ const yokaiList = [
   },
   {
     id: '006', name: 'ブルーム', feature: 'イヤホンから音が筒抜け',
-    habitat: '電車全般', rarity: 'N', mainType: '笑', subType: '陰',
+    habitat: '電車全般', rarity: 'N', type: '笑',
     image: bloomImg,
     subText: 'イヤホンから音が筒抜けのモックだ。',
     description: '好きな音楽に夢中なのでしょうか。\nその曲、いい曲ですよね。',
@@ -484,7 +465,7 @@ const yokaiList = [
   },
   {
     id: '007', name: 'エルダー', feature: '誰も求めていない話を会議で延々と語る', image: elderImg,
-    habitat: '会社の会議室', rarity: 'R', mainType: '怒', subType: '陽',
+    habitat: '会社の会議室', rarity: 'R', type: '怒',
     subText: '誰も求めていない話を延々と語るモックだ。',
     description: '伝えたいことがたくさんあるのでしょう。\nその思い、きちんと受け取りたいと思います。',
     weakness: { correct: '議題に戻す', wrong: ['うなずき続ける', 'メモを取る', 'その場を離れる'] },
@@ -502,7 +483,7 @@ const yokaiList = [
   },
   {
     id: '008', name: 'ヘイズ', feature: 'スマホを見ながらふらふら歩く', image: hazeImg,
-    habitat: '駅・街中', rarity: 'N', mainType: '無', subType: '陰',
+    habitat: '駅・街中', rarity: 'N', type: '陰',
     subText: 'スマホを見ながらふらふら歩くモックだ。',
     description: '大切な相手とのメッセージを見ているのでしょうか。\n足元も、見てあげてくださいね。',
     weakness: { correct: '前に立ち止まる', wrong: ['大きく避ける', '声をかける'] },
@@ -520,7 +501,7 @@ const yokaiList = [
   },
   {
     id: '009', name: 'ランス', feature: '歩きながら傘を横に振り回す', image: lanceImg,
-    habitat: '雨の日の駅', rarity: 'R', mainType: '怒', subType: '陽',
+    habitat: '雨の日の駅', rarity: 'R', type: '陽',
     subText: '傘を横に振り回しながら歩くモックだ。',
     description: '雨の日は気持ちが弾むのでしょうか。\nその元気、少しだけおさめてくれると助かります。',
     weakness: { correct: '距離を取る', wrong: ['じっと見つめる', '声をかける', '走って逃げる'] },
@@ -538,7 +519,7 @@ const yokaiList = [
   },
   {
     id: '010', name: 'プリーチ', feature: '頼んでもいないのに長々と説教してくる', image: preachImg,
-    habitat: '会社・居酒屋', rarity: 'SR', mainType: '怒', subType: '陽',
+    habitat: '会社・居酒屋', rarity: 'SR', type: '怒',
     subText: '頼んでもいないのに説教してくるモックだ。',
     description: '何か伝えたいことがあるのでしょうか。\nはい、ちゃんと聞いています。\nおっしゃる通りです。',
     weakness: { correct: '話を聞いているふりをする', wrong: ['反論する', '話を遮る', '席を立つ'] },
@@ -553,7 +534,7 @@ const yokaiList = [
   },
   {
     id: '011', name: 'ペニー', feature: '飲み会で絶対に多く払わない・細かく計算する', image: pennyImg,
-    habitat: '居酒屋', rarity: 'SR', mainType: '怒', subType: '陽',
+    habitat: '居酒屋', rarity: 'SR', type: '陰',
     subText: '飲み会で絶対に多く払わないモックだ。',
     description: '計算が得意なのでしょうか。\n几帳面なんですね、すごいです。\nじゃあ私が払っておきますね。',
     weakness: { correct: '先に支払いを済ませる', wrong: ['計算に付き合う', '割り勘を主張する', '諦める'] },
@@ -568,7 +549,7 @@ const yokaiList = [
   },
   {
     id: '012', name: 'ゴースト', feature: '重要なLINEを既読スルーし続ける', image: ghostImg,
-    habitat: 'SNS・職場', rarity: 'SR', mainType: '無', subType: '陰',
+    habitat: 'SNS・職場', rarity: 'SR', type: '陰',
     subText: '重要なLINEを既読スルーし続けるモックだ。',
     description: '忙しいのでしょうか。\n返信しづらいこともありますよね。\n気が向いたら連絡ください。',
     weakness: { correct: '直接話しかける', wrong: ['再送する', 'スタンプを送る', '待ち続ける'] },
@@ -583,7 +564,7 @@ const yokaiList = [
   },
   {
     id: '013', name: 'アイビー', feature: '他人の仕事の成果を自分のものにする', image: ivyImg,
-    habitat: '会社', rarity: 'SR', mainType: '怒', subType: '陽',
+    habitat: '会社', rarity: 'SR', type: '陽',
     subText: '他人の成果を横取りするモックだ。',
     description: '認められたいのでしょうか。\n頑張っているんですね。\nちゃんと見ていますよ。',
     weakness: { correct: '証拠を残す', wrong: ['黙認する', '直接訴える', '上司に報告する'] },
@@ -598,7 +579,7 @@ const yokaiList = [
   },
   {
     id: '014', name: 'ロアー', feature: '電車内で大声で電話し続ける伝説の存在',
-    habitat: '電車', rarity: 'UR', mainType: '怒', subType: '陽', image: roarImg,
+    habitat: '電車', rarity: 'UR', type: '怒', image: roarImg,
     subText: '電車内で大声で電話し続ける伝説のモックだ。',
     description: '大切な電話なのでしょうか。\nお忙しいんですね。',
     weakness: { correct: '静かにプレッシャーをかける', wrong: ['注意する', '車両を移動する', '耳をふさぐ', '車掌に言いに行く'] },
@@ -613,7 +594,7 @@ const yokaiList = [
   },
   {
     id: '015', name: 'ラスト', feature: '飲み会を終わらせてくれない・帰らせてくれない', image: lastImg,
-    habitat: '居酒屋', rarity: 'UR', mainType: '笑', subType: '陽',
+    habitat: '居酒屋', rarity: 'UR', type: '笑',
     subText: '飲み会を絶対に終わらせてくれないモックだ。',
     description: 'まだ一緒にいたいのでしょうか。\n楽しい時間はあっという間ですね。\nでは、そろそろ…。',
     weakness: { correct: '終電を理由に席を立つ', wrong: ['もう一杯だけ付き合う', 'トイレを口実にする', '眠いふりをする', '友人への電話を装う'] },
@@ -1657,25 +1638,65 @@ function DescriptionScene({ yokai, onDone }) {
   );
 }
 
-// ===== 捕獲画面 =====
-// sealed=trueのとき封印中（特殊状態なし）
-function rollSpecialStatus(sealed = false) {
-  if (sealed) return null;
-  const r = Math.random();
-  if (r < 0.05) return 'flee_prep';   // 5%: 逃走準備
-  if (r < 0.15) return 'vulnerable';  // 10%: 無防備
-  if (r < 0.25) return 'strong';      // 10%: 強がり
-  if (r < 0.40) return 'flinching';   // 15%: ひるみ
-  return null;                         // 60%: 通常
+// ===== 捕獲画面（記憶ゲーム方式） =====
+const MEMORY_CONFIG = {
+  N:  { count: 3, showMs: 1000, gapMs: 500  },
+  R:  { count: 4, showMs: 700,  gapMs: 300  },
+  SR: { count: 5, showMs: 500,  gapMs: 200  },
+  UR: { count: 6, showMs: 300,  gapMs: 150  },
+};
+
+// 魔法陣内のポジション（円周8点 + 中央、%）
+const LIGHT_POSITIONS = [
+  { x: 50, y: 11 },
+  { x: 76, y: 24 },
+  { x: 85, y: 50 },
+  { x: 76, y: 76 },
+  { x: 50, y: 89 },
+  { x: 24, y: 76 },
+  { x: 15, y: 50 },
+  { x: 24, y: 24 },
+  { x: 50, y: 50 },
+];
+
+function playMemoryCorrectSound() {
+  try {
+    const ctx = getSECtx();
+    if (!ctx) return;
+    const go = () => {
+      const t = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, t);
+      osc.frequency.exponentialRampToValueAtTime(1320, t + 0.12);
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.28, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(t); osc.stop(t + 0.22);
+    };
+    ctx.state === 'suspended' ? ctx.resume().then(go) : go();
+  } catch {}
 }
 
-function getCaptureRate(hp) {
-  if (hp === 0)   return 0.90;
-  if (hp <= 20)   return 0.70;
-  if (hp <= 35)   return 0.60;
-  if (hp <= 50)   return 0.40;
-  if (hp <= 70)   return 0.20;
-  return 0.10;
+function playMemoryWrongSound() {
+  try {
+    const ctx = getSECtx();
+    if (!ctx) return;
+    const go = () => {
+      const t = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(160, t);
+      osc.frequency.exponentialRampToValueAtTime(70, t + 0.18);
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.35, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(t); osc.stop(t + 0.22);
+    };
+    ctx.state === 'suspended' ? ctx.resume().then(go) : go();
+  } catch {}
 }
 
 function TypeBadge({ type }) {
@@ -1689,158 +1710,112 @@ function TypeBadge({ type }) {
   );
 }
 
-function CaptureScreen({ yokai, location, deck, onCaptured, onBack }) {
-  const [maxTurns] = useState(() => {
-    if (yokai.rarity === 'UR') return 1 + Math.floor(Math.random() * 3);
-    return CAPTURE_TURNS[yokai.rarity] ?? 5;
-  });
-  const showTurns = yokai.rarity !== 'UR';
+function CaptureScreen({ yokai, location, onCaptured, onBack }) {
+  const cfg = MEMORY_CONFIG[yokai.rarity] ?? MEMORY_CONFIG.N;
 
-  const [hp, setHp]                       = useState(100);
-  const [turnCount, setTurnCount]         = useState(0);
-  const [phase, setPhase]                 = useState('pre_turn');
-  const [specialStatus, setSpecialStatus] = useState(() => rollSpecialStatus());
-  const [resultMsg, setResultMsg]         = useState('');
-  const [resultEffect, setResultEffect]   = useState(''); // '' | 'super' | 'normal' | 'weak'
-  const [hitType, setHitType]             = useState('');
-  const [skillUseCounts, setSkillUseCounts] = useState(() => {
-    const counts = {};
-    (deck ?? []).forEach(s => { counts[s.id] = 0; });
-    return counts;
-  });
-  const timerRef     = useRef(null);
-  const sealNextRef  = useRef(false); // 封印: 次ターン特殊状態なし
-  const willFleeRef  = useRef(false); // 逃走準備: 次ターン逃走
-
-  useEffect(() => () => clearTimeout(timerRef.current), []);
-
-  useEffect(() => {
-    if (phase !== 'pre_turn') return;
-    // 逃走準備が発動していたら即逃走
-    if (willFleeRef.current) {
-      willFleeRef.current = false;
-      setPhase('escaped');
-      return;
+  const [sequence] = useState(() => {
+    const indices = Array.from({ length: LIGHT_POSITIONS.length }, (_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
     }
-    const t = setTimeout(() => setPhase('action_choice'), 1800);
-    return () => clearTimeout(t);
+    return indices.slice(0, cfg.count);
+  });
+
+  const [phase, setPhase]           = useState('intro');
+  const [showingStep, setShowingStep] = useState(-1);
+  const [userInput, setUserInput]   = useState([]);
+  const [tapFeedback, setTapFeedback] = useState({});
+  const missRef           = useRef(0);
+  const captureSuccessRef = useRef(false);
+  const timerRef          = useRef(null);
+  const fbTimerRef        = useRef(null);
+
+  useEffect(() => () => {
+    clearTimeout(timerRef.current);
+    clearTimeout(fbTimerRef.current);
+  }, []);
+
+  // intro → showing
+  useEffect(() => {
+    if (phase !== 'intro') return;
+    timerRef.current = setTimeout(() => setPhase('showing'), 1800);
   }, [phase]);
 
+  // showing: シーケンス再生
   useEffect(() => {
-    if (phase === 'magic_pull')   playCaptureSound('pull');
-    if (phase === 'magic_absorb') playCaptureSound('pyon');
-  }, [phase]);
-
-  function advanceTurn(newTurn) {
-    if (newTurn >= maxTurns) {
-      setPhase('escaped');
-      return;
-    }
-    const sealed = sealNextRef.current;
-    sealNextRef.current = false;
-    setSpecialStatus(rollSpecialStatus(sealed));
-    setPhase('pre_turn');
-  }
-
-  function handleCaptureAttempt() {
-    const newTurn = turnCount + 1;
-    setTurnCount(newTurn);
-    willFleeRef.current = false; // 捕獲試みで逃走準備解除
-    const baseRate = getCaptureRate(hp);
-    const rate = specialStatus === 'vulnerable' ? Math.min(1, baseRate * 2) : baseRate;
-    const captureSuccess = Math.random() < rate;
-
-    setPhase('magic_appear');
-    timerRef.current = setTimeout(() => {
-      setPhase('magic_pull');
+    if (phase !== 'showing') return;
+    let step = 0;
+    let cancelled = false;
+    function showNext() {
+      if (cancelled) return;
+      if (step >= sequence.length) {
+        setShowingStep(-1);
+        timerRef.current = setTimeout(() => { if (!cancelled) setPhase('ready'); }, 300);
+        return;
+      }
+      setShowingStep(step);
       timerRef.current = setTimeout(() => {
-        setPhase('magic_absorb');
-        timerRef.current = setTimeout(() => {
-          if (captureSuccess) {
-            setPhase('captured');
-          } else {
-            setPhase('magic_fail');
-            timerRef.current = setTimeout(() => advanceTurn(newTurn), 1500);
-          }
-        }, 500);
-      }, 1500);
-    }, 400);
+        if (cancelled) return;
+        setShowingStep(-1);
+        timerRef.current = setTimeout(() => { step++; showNext(); }, cfg.gapMs);
+      }, cfg.showMs);
+    }
+    showNext();
+    return () => { cancelled = true; };
+  }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ready → answering
+  useEffect(() => {
+    if (phase !== 'ready') return;
+    timerRef.current = setTimeout(() => setPhase('answering'), 900);
+  }, [phase]);
+
+  // magic フェーズ遷移
+  useEffect(() => {
+    if (phase === 'magic_appear') {
+      timerRef.current = setTimeout(() => {
+        setPhase(captureSuccessRef.current ? 'magic_pull' : 'magic_fail');
+      }, 500);
+    }
+    if (phase === 'magic_pull') {
+      playCaptureSound('pull');
+      timerRef.current = setTimeout(() => setPhase('magic_absorb'), 1500);
+    }
+    if (phase === 'magic_absorb') {
+      playCaptureSound('pyon');
+      timerRef.current = setTimeout(() => setPhase('captured'), 500);
+    }
+    if (phase === 'magic_fail') {
+      timerRef.current = setTimeout(() => setPhase('escaped'), 1000);
+    }
+  }, [phase]);
+
+  function handleTap(posIdx) {
+    if (phase !== 'answering') return;
+    const step = userInput.length;
+    if (step >= sequence.length) return;
+
+    const isCorrect = posIdx === sequence[step];
+    if (!isCorrect) missRef.current += 1;
+
+    setUserInput(prev => [...prev, posIdx]);
+    setTapFeedback(prev => ({ ...prev, [posIdx]: isCorrect ? 'correct' : 'wrong' }));
+    if (isCorrect) playMemoryCorrectSound();
+    else           playMemoryWrongSound();
+
+    clearTimeout(fbTimerRef.current);
+    fbTimerRef.current = setTimeout(() => {
+      setTapFeedback(prev => { const n = { ...prev }; delete n[posIdx]; return n; });
+    }, 350);
+
+    if (step + 1 >= sequence.length) {
+      const miss = missRef.current;
+      const rate = miss === 0 ? 0.9 : miss === 1 ? 0.6 : miss === 2 ? 0.3 : 0.1;
+      captureSuccessRef.current = Math.random() < rate;
+      timerRef.current = setTimeout(() => setPhase('magic_appear'), 700);
+    }
   }
-
-  function handleSkillUse(skill) {
-    if (phase !== 'skill_choice') return;
-    // 使用回数チェック
-    const limit = SKILL_USE_LIMIT[skill.power];
-    if (limit !== undefined && (skillUseCounts[skill.id] ?? 0) >= limit) return;
-    // 使用回数を消費
-    setSkillUseCounts(prev => ({ ...prev, [skill.id]: (prev[skill.id] ?? 0) + 1 }));
-
-    // 逃走準備中に攻撃 → 次ターン逃走（混乱効果で解除可）
-    if (specialStatus === 'flee_prep' && skill.effect !== 'confuse') {
-      willFleeRef.current = true;
-    } else {
-      willFleeRef.current = false;
-    }
-
-    // 封印効果
-    if (skill.effect === 'seal') sealNextRef.current = true;
-
-    // ダメージ計算
-    const typeMulti = calcTypeMultiplier(skill.type, yokai.mainType, yokai.subType);
-    const isSureHit = skill.effect === 'sure_hit';
-    let statusMulti = 1.0;
-    if (!isSureHit) {
-      if (specialStatus === 'flinching') statusMulti = 2.0;
-      if (specialStatus === 'strong')    statusMulti = 0.5;
-    }
-
-    let totalDmg;
-    if (skill.effect === 'multi') {
-      const h1 = Math.floor(rollSkillDamage(skill.power) * 0.5 * typeMulti * statusMulti);
-      const h2 = Math.floor(rollSkillDamage(skill.power) * 0.5 * typeMulti * statusMulti);
-      totalDmg = h1 + h2;
-    } else {
-      totalDmg = Math.floor(rollSkillDamage(skill.power) * typeMulti * statusMulti);
-    }
-    totalDmg = Math.max(1, totalDmg);
-
-    const newHp   = Math.max(0, hp - totalDmg);
-    const newTurn = turnCount + 1;
-    setHp(newHp);
-    setTurnCount(newTurn);
-
-    // タイプ相性メッセージ
-    let msg;
-    let eff = 'normal';
-    if (skill.effect === 'multi') {
-      msg = `${skill.name}が2回ヒット！（計-${totalDmg}）`;
-    } else if (typeMulti >= 2.0) {
-      msg = `効果は抜群だ！（-${totalDmg}）`; eff = 'super';
-    } else if (typeMulti >= 1.5) {
-      msg = `効果は大きい！（-${totalDmg}）`; eff = 'super';
-    } else if (typeMulti <= 0.5) {
-      msg = `効果はいまいち…（-${totalDmg}）`; eff = 'weak';
-    } else {
-      msg = `${skill.name}を使った！（-${totalDmg}）`;
-    }
-    if (skill.effect === 'confuse' && specialStatus === 'flee_prep') {
-      msg += ' 逃走準備が解除された！';
-    }
-
-    setResultMsg(msg);
-    setResultEffect(eff);
-    setHitType(totalDmg >= 30 ? 'big' : 'small');
-    setPhase('attack_result');
-    timerRef.current = setTimeout(() => advanceTurn(newTurn), 1800);
-  }
-
-  const imgShakeClass = hitType === 'big'      ? 'yokai-img-shake-big'
-    : hitType === 'small'                      ? 'yokai-img-shake-small'
-    : phase === 'magic_pull'                   ? 'yokai-pull-to-circle'
-    : phase === 'magic_absorb'                 ? 'yokai-absorb'
-    : phase === 'magic_fail'                   ? 'yokai-fail-return'
-    : phase === 'magic_appear'                 ? ''
-    : 'yokai-float';
 
   const captureBgStyle = LOCATION_BG[location]
     ? { backgroundImage: `url(${LOCATION_BG[location]})`, backgroundSize: 'cover', backgroundPosition: 'center' }
@@ -1881,13 +1856,11 @@ function CaptureScreen({ yokai, location, deck, onCaptured, onBack }) {
     );
   }
 
-  const hpColor = hp <= 29 ? '#cc4444' : hp <= 59 ? '#c8820a' : '#4a9a6a';
-  const showTurnsNow = showTurns && phase !== 'attack_result' && !phase.startsWith('magic_');
-  const isFleePrepNow = specialStatus === 'flee_prep';
+  const isMagicPhase = ['magic_appear', 'magic_pull', 'magic_absorb', 'magic_fail'].includes(phase);
 
   return (
-    <div className="screen capture-screen" style={captureBgStyle}>
-      {phase.startsWith('magic_') && (
+    <div className="screen capture-screen memory-game-screen" style={captureBgStyle}>
+      {isMagicPhase && (
         <div className="magic-circle-overlay">
           <div className={`magic-circle-body ${
             phase === 'magic_appear'  ? 'magic-body-appear' :
@@ -1904,126 +1877,87 @@ function CaptureScreen({ yokai, location, deck, onCaptured, onBack }) {
           </div>
         </div>
       )}
-      <div className={`capture-box ${phase === 'magic_fail' ? 'shake' : ''}`}>
-        <div className="capture-yokai-header">
-          <p className="capture-yokai-name-small">{yokai.name}</p>
-          <div className="capture-type-badges">
-            <TypeBadge type={yokai.mainType} />
-            <TypeBadge type={yokai.subType} />
-          </div>
+      {phase === 'magic_pull' && (
+        <p className="magic-capture-text memory-magic-pull-text">引き込んでいる…</p>
+      )}
+
+      <div className="memory-header">
+        <div className="memory-header-badges">
+          <TypeBadge type={yokai.type} />
+          <span className="memory-rarity-label">{rarityLabel[yokai.rarity]}</span>
         </div>
-        <div
-          className={`yokai-img-wrap ${imgShakeClass}`}
-          onAnimationEnd={() => setHitType('')}
-        >
-          <YokaiImage yokai={yokai} size="xl" className="capture-yokai-img" />
-        </div>
+        <p className="memory-yokai-name">{yokai.name}</p>
+      </div>
 
-        <div className="capture-hp-wrap">
-          <div className="capture-hp-header">
-            <span className="capture-hp-label">体力</span>
-            <span className="capture-hp-pct" style={{ color: hpColor }}>{hp}</span>
-          </div>
-          <div className="capture-hp-bg">
-            <div className="capture-hp-fill" style={{ width: `${hp}%`, backgroundColor: hpColor }} />
-          </div>
-        </div>
+      <div className="memory-char-wrap">
+        <img src={yokai.image} alt={yokai.name} className="memory-char-img" />
+      </div>
 
-        {showTurnsNow && (
-          <p className="capture-turns-left">残りターン：{maxTurns - turnCount}</p>
-        )}
-
-        {phase === 'pre_turn' && (
-          <p className={`capture-special-msg${isFleePrepNow ? ' flee-prep-warning' : ''}`}>
-            {specialStatus === 'strong'     && 'モックが強がっている！'}
-            {specialStatus === 'flinching'  && 'モックがひるんでいる！'}
-            {specialStatus === 'vulnerable' && 'モックが無防備になっている！'}
-            {specialStatus === 'flee_prep'  && '今すぐ捕獲しないと逃げる！'}
-            {!specialStatus                 && '……'}
-          </p>
-        )}
-
-        {phase === 'action_choice' && (
-          <div className="capture-action-choice">
-            {isFleePrepNow && (
-              <p className="flee-prep-warning">今すぐ捕獲しないと逃げる！</p>
-            )}
-            {hp === 0 && <p className="capture-chance-msg">今がチャンス！</p>}
-            <p className="capture-prompt">どうしますか？</p>
-            <div className="capture-choices capture-main-choices">
-              {hp > 0 && (
-                <button className="capture-choice-btn capture-choice-btn-attack" onClick={() => setPhase('skill_choice')}>
-                  技を使う
-                </button>
-              )}
-              <button className="capture-choice-btn capture-choice-btn-capture" onClick={handleCaptureAttempt}>
-                捕獲する
-              </button>
+      <div className="memory-arena-wrap">
+        <div className="memory-arena">
+          {/* 魔法陣の装飾（magic phaseはオーバーレイに切り替えるので非表示） */}
+          {!isMagicPhase && (
+            <div className="memory-magic-deco">
+              <div className="magic-ring-outer" />
+              <div className="magic-ring-inner" />
+              <div className="magic-glyph magic-glyph-1" />
+              <div className="magic-glyph magic-glyph-2" />
+              <div className="magic-glyph magic-glyph-3" />
+              <div className="magic-center" />
             </div>
-          </div>
-        )}
+          )}
+          {/* 全ドット表示（シーケンス外は薄く、シーケンス内は光る） */}
+          {LIGHT_POSITIONS.map((pos, posIdx) => {
+            const seqStepIdx  = sequence.indexOf(posIdx);
+            const isInSeq     = seqStepIdx !== -1;
+            const isLit       = phase === 'showing' && isInSeq && showingStep === seqStepIdx;
+            const isAnswering = phase === 'answering';
+            const isDone      = isAnswering && isInSeq && userInput.length > seqStepIdx;
+            const isTappable  = isAnswering && !isDone;
+            const fb          = tapFeedback[posIdx];
+            return (
+              <div
+                key={posIdx}
+                className={[
+                  'memory-dot',
+                  isLit            ? 'memory-dot-lit'      : '',
+                  isTappable       ? 'memory-dot-tappable' : '',
+                  fb === 'correct' ? 'memory-dot-correct'  : '',
+                  fb === 'wrong'   ? 'memory-dot-wrong'    : '',
+                  isDone           ? 'memory-dot-done'     : '',
+                  !isInSeq && !fb  ? 'memory-dot-inactive' : '',
+                ].filter(Boolean).join(' ')}
+                style={{ left: `calc(${pos.x}% - 20px)`, top: `calc(${pos.y}% - 20px)` }}
+                onClick={() => handleTap(posIdx)}
+              />
+            );
+          })}
+        </div>
+      </div>
 
-        {phase === 'skill_choice' && (
+      <div className="memory-status">
+        {phase === 'intro' && (
           <>
-            <p className="capture-prompt">どの技を使う？</p>
-            <div className="capture-skill-list">
-              {(deck ?? []).map((skill) => {
-                const tm = calcTypeMultiplier(skill.type, yokai.mainType, yokai.subType);
-                const effClass = tm >= 2.0 ? 'skill-eff-super' : tm <= 0.5 ? 'skill-eff-weak' : '';
-                const limit = SKILL_USE_LIMIT[skill.power];
-                const usedCount = skillUseCounts[skill.id] ?? 0;
-                const remaining = limit !== undefined ? limit - usedCount : null;
-                const isExhausted = remaining !== null && remaining <= 0;
-                return (
-                  <button
-                    key={skill.id}
-                    className={`capture-skill-btn ${effClass}${isExhausted ? ' skill-exhausted' : ''}`}
-                    onClick={() => handleSkillUse(skill)}
-                    disabled={isExhausted}
-                  >
-                    <span className="capture-skill-name">{skill.name}</span>
-                    <TypeBadge type={skill.type} />
-                    <span className="capture-skill-power">{skill.power}</span>
-                    {skill.effect && (
-                      <span className="capture-skill-effect">{EFFECT_LABELS[skill.effect]}</span>
-                    )}
-                    {isExhausted
-                      ? <span className="skill-use-count skill-use-exhausted">使用済み</span>
-                      : remaining !== null
-                        ? <span className="skill-use-count">残り{remaining}回</span>
-                        : null
-                    }
-                    {tm >= 2.0 && <span className="eff-label eff-super">抜群</span>}
-                    {tm <= 0.5 && <span className="eff-label eff-weak">いまいち</span>}
-                  </button>
-                );
-              })}
-            </div>
-            <button className="capture-give-up-link" style={{ marginTop: 8 }} onClick={() => setPhase('action_choice')}>
-              もどる
-            </button>
+            <p className="memory-instr-main">光る順番を覚えて！</p>
+            <p className="memory-instr-sub">{cfg.count}箇所の光を記憶する</p>
           </>
         )}
-
-        {phase === 'magic_pull' && (
-          <p className="magic-capture-text">引き込んでいる…</p>
-        )}
-
-        {phase === 'attack_result' && (
-          <p className={`capture-result-msg ${resultEffect === 'super' ? 'result-super' : resultEffect === 'weak' ? 'result-weak' : ''}`}>
-            {resultMsg}
+        {phase === 'showing'   && <p className="memory-watching-text">覚えて…</p>}
+        {phase === 'ready'     && <p className="memory-go-text">さあ、タップして！</p>}
+        {phase === 'answering' && (
+          <p className="memory-progress-text">
+            {userInput.length < sequence.length
+              ? `${userInput.length + 1} / ${sequence.length}`
+              : '判定中…'}
           </p>
         )}
-        {phase === 'magic_fail' && (
-          <p className="capture-result-msg capture-fail-msg">まだ捕まらない！</p>
-        )}
-
-        {phase !== 'skill_choice' && (
-          <div className="capture-give-up-wrap">
-            <button className="capture-give-up-link" onClick={onBack}>諦める</button>
-          </div>
-        )}
       </div>
+
+      {!isMagicPhase && (
+        <div className="capture-give-up-wrap">
+          <button className="capture-give-up-link" onClick={onBack}>諦める</button>
+        </div>
+      )}
     </div>
   );
 }
@@ -2444,7 +2378,6 @@ function App() {
   const [selectedYokai, setSelectedYokai]   = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [ownedSkillIds, setOwnedSkillIds]   = useState(() => loadOwnedSkills());
-  const [selectedDeck, setSelectedDeck]     = useState(null);
   const [pendingLearnedSkill, setPendingLearnedSkill] = useState(null);
 
   // ===== データ変更時に自動保存 =====
@@ -2542,7 +2475,6 @@ function App() {
     const ownedIds = loadOwnedSkills();
     const validIds = deckIds.filter(id => ownedIds.includes(id));
     const finalIds = validIds.length === 3 ? validIds : [...INITIAL_SKILL_IDS];
-    setSelectedDeck(finalIds.map(id => ALL_SKILLS.find(s => s.id === id)));
     playBGM(BGM_SRC.battle);
     setScreen('capture');
   }
@@ -2551,7 +2483,6 @@ function App() {
     const captureId = `cap_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     setCapturedList((prev) => [...prev, { ...selectedYokai, captureId }]);
     setEncounteredIds((prev) => new Set([...prev, selectedYokai.id]));
-    setSelectedDeck(null);
     playBGM(BGM_SRC.home);
     setScreen('home');
   }
@@ -2656,7 +2587,6 @@ function App() {
         <CaptureScreen
           yokai={selectedYokai}
           location={selectedLocation}
-          deck={selectedDeck}
           onCaptured={handleCaptured}
           onBack={() => { playBGM(BGM_SRC.home); setScreen('home'); }}
         />

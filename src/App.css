@@ -3010,3 +3010,224 @@ img {
   .dex-grid  { grid-template-columns: repeat(3, 1fr); }
   .hall-grid { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* ===== 記憶ゲーム捕獲画面 ===== */
+.memory-game-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.memory-header {
+  padding: 14px 20px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.memory-yokai-name {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--brown);
+  margin: 0;
+  text-align: center;
+}
+
+.memory-header-badges {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.memory-rarity-label {
+  font-size: 0.78rem;
+  font-weight: bold;
+  color: var(--muted);
+}
+
+.memory-char-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 0 0 4px;
+}
+
+.memory-char-img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  animation: memCharFloat 3s ease-in-out infinite;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.28));
+}
+
+@keyframes memCharFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-9px); }
+}
+
+.memory-arena-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 4px 0;
+}
+
+.memory-arena {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 魔法陣の装飾（magic-circle-body と同サイズ） */
+.memory-magic-deco {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 光のドット（基本：薄いグレー） */
+.memory-dot {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(160, 165, 175, 0.14);
+  border: 2px solid rgba(160, 165, 175, 0.30);
+  transition: background 0.12s, box-shadow 0.12s, transform 0.12s, border-color 0.12s;
+  pointer-events: none;
+}
+
+/* 記憶フェーズ：点灯中 */
+.memory-dot-lit {
+  background: radial-gradient(circle, rgba(255, 230, 120, 0.95) 0%, rgba(232, 135, 74, 0.85) 55%, transparent 100%);
+  border-color: #ffd700;
+  box-shadow: 0 0 22px rgba(255, 220, 80, 0.95), 0 0 44px rgba(232, 135, 74, 0.6);
+  transform: scale(1.35);
+}
+
+/* 解答フェーズ：タップ可能（色は変えず操作だけ有効化） */
+.memory-dot-tappable {
+  pointer-events: all;
+  cursor: pointer;
+}
+
+.memory-dot-tappable:hover {
+  background: rgba(160, 165, 175, 0.28);
+  transform: scale(1.10);
+}
+
+.memory-dot-tappable:active {
+  transform: scale(0.93);
+}
+
+/* 正解タップ */
+.memory-dot-correct {
+  background: radial-gradient(circle, rgba(255, 230, 80, 0.98) 0%, rgba(255, 190, 40, 0.85) 55%, transparent 100%);
+  border-color: #ffd700;
+  box-shadow: 0 0 28px rgba(255, 220, 60, 1), 0 0 56px rgba(255, 200, 50, 0.7);
+  animation: memDotSparkle 0.35s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes memDotSparkle {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.55); }
+  100% { transform: scale(1.2); }
+}
+
+/* 不正解タップ */
+.memory-dot-wrong {
+  background: radial-gradient(circle, rgba(255, 80, 80, 0.92) 0%, rgba(200, 40, 40, 0.75) 55%, transparent 100%);
+  border-color: #ff4444;
+  box-shadow: 0 0 22px rgba(255, 60, 60, 0.85);
+  animation: memDotShake 0.3s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes memDotShake {
+  0%   { transform: translate(0, 0) scale(1); }
+  20%  { transform: translate(-5px, 0) scale(1.1); }
+  40%  { transform: translate(5px, 0) scale(1.1); }
+  60%  { transform: translate(-3px, 0) scale(1.05); }
+  80%  { transform: translate(3px, 0) scale(1.05); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* タップ済み（薄いグレーに戻す） */
+.memory-dot-done {
+  background: rgba(160, 165, 175, 0.14);
+  border-color: rgba(160, 165, 175, 0.30);
+  pointer-events: none;
+}
+
+/* シーケンス外（ベースと同じグレー） */
+.memory-dot-inactive {
+  background: rgba(160, 165, 175, 0.14);
+  border-color: rgba(160, 165, 175, 0.30);
+}
+
+/* ステータステキスト */
+.memory-status {
+  padding: 6px 20px 8px;
+  text-align: center;
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.memory-instr-main {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--brown);
+  margin: 0;
+}
+
+.memory-instr-sub {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.memory-watching-text,
+.memory-progress-text {
+  font-size: 1.05rem;
+  font-weight: bold;
+  color: var(--brown);
+  margin: 0;
+  animation: fadeInPhrase 0.3s ease forwards;
+  opacity: 0;
+}
+
+.memory-go-text {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #c8820a;
+  margin: 0;
+  animation: memGoFlash 0.45s ease-in-out infinite alternate;
+}
+
+@keyframes memGoFlash {
+  from { opacity: 0.75; transform: scale(1); }
+  to   { opacity: 1;    transform: scale(1.06); }
+}
+
+.memory-magic-pull-text {
+  position: fixed;
+  bottom: 28%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 301;
+}
