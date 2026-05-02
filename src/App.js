@@ -165,17 +165,6 @@ function _stopBGM() {
 }
 
 
-// ===== タイプシステム =====
-// 三すくみ: 笑→無×2, 無→怒×2, 怒→笑×2（逆は×0.5）
-// 対立: 陽→陰×1.5, 陰→陽×1.5
-// 笑/無/怒 vs 陽/陰: ×1.0
-const TYPE_CHART = {
-  '笑': { '笑': 1.0, '無': 2.0, '怒': 0.5, '陽': 1.0, '陰': 1.0 },
-  '無': { '笑': 0.5, '無': 1.0, '怒': 2.0, '陽': 1.0, '陰': 1.0 },
-  '怒': { '笑': 2.0, '無': 0.5, '怒': 1.0, '陽': 1.0, '陰': 1.0 },
-  '陽': { '笑': 1.0, '無': 1.0, '怒': 1.0, '陽': 1.0, '陰': 1.5 },
-  '陰': { '笑': 1.0, '無': 1.0, '怒': 1.0, '陽': 1.5, '陰': 1.0 },
-};
 
 const TYPE_COLOR = {
   '笑': '#E8874A',
@@ -2482,10 +2471,6 @@ function App() {
   }
 
   function handleDescriptionDone() {
-    const deckIds = loadSavedDeck();
-    const ownedIds = loadOwnedSkills();
-    const validIds = deckIds.filter(id => ownedIds.includes(id));
-    const finalIds = validIds.length === 3 ? validIds : [...INITIAL_SKILL_IDS];
     playBGM(BGM_SRC.battle);
     setScreen('capture');
   }
