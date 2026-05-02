@@ -3231,3 +3231,12 @@ img {
   transform: translateX(-50%);
   z-index: 301;
 }
+
+.memory-perfect-text {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #c8820a;
+  margin: 0;
+  text-align: center;
+  animation: fadeInPhrase 0.3s ease forwards;
+}

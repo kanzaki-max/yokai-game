@@ -1771,6 +1771,12 @@ function CaptureScreen({ yokai, location, onCaptured, onBack }) {
     timerRef.current = setTimeout(() => setPhase('answering'), 900);
   }, [phase]);
 
+  // perfect → magic_appear
+  useEffect(() => {
+    if (phase !== 'perfect') return;
+    timerRef.current = setTimeout(() => setPhase('magic_appear'), 1000);
+  }, [phase]);
+
   // magic フェーズ遷移
   useEffect(() => {
     if (phase === 'magic_appear') {
@@ -1811,9 +1817,13 @@ function CaptureScreen({ yokai, location, onCaptured, onBack }) {
 
     if (step + 1 >= sequence.length) {
       const miss = missRef.current;
-      const rate = miss === 0 ? 0.9 : miss === 1 ? 0.6 : miss === 2 ? 0.3 : 0.1;
-      captureSuccessRef.current = Math.random() < rate;
-      timerRef.current = setTimeout(() => setPhase('magic_appear'), 700);
+      const rate = miss === 0 ? 100 : miss === 1 ? 60 : miss === 2 ? 30 : 10;
+      captureSuccessRef.current = Math.random() < rate / 100;
+      if (miss === 0) {
+        timerRef.current = setTimeout(() => setPhase('perfect'), 700);
+      } else {
+        timerRef.current = setTimeout(() => setPhase('magic_appear'), 700);
+      }
     }
   }
 
@@ -1894,66 +1904,67 @@ function CaptureScreen({ yokai, location, onCaptured, onBack }) {
       </div>
 
       <div className="memory-arena-wrap">
-        <div className="memory-arena">
-          {/* 魔法陣の装飾（magic phaseはオーバーレイに切り替えるので非表示） */}
-          {!isMagicPhase && (
-            <div className="memory-magic-deco">
-              <div className="magic-ring-outer" />
-              <div className="magic-ring-inner" />
-              <div className="magic-glyph magic-glyph-1" />
-              <div className="magic-glyph magic-glyph-2" />
-              <div className="magic-glyph magic-glyph-3" />
-              <div className="magic-center" />
-            </div>
-          )}
-          {/* 全ドット表示（シーケンス外は薄く、シーケンス内は光る） */}
-          {LIGHT_POSITIONS.map((pos, posIdx) => {
-            const seqStepIdx  = sequence.indexOf(posIdx);
-            const isInSeq     = seqStepIdx !== -1;
-            const isLit       = phase === 'showing' && isInSeq && showingStep === seqStepIdx;
-            const isAnswering = phase === 'answering';
-            const isDone      = isAnswering && isInSeq && userInput.length > seqStepIdx;
-            const isTappable  = isAnswering && !isDone;
-            const fb          = tapFeedback[posIdx];
-            return (
-              <div
-                key={posIdx}
-                className={[
-                  'memory-dot',
-                  isLit            ? 'memory-dot-lit'      : '',
-                  isTappable       ? 'memory-dot-tappable' : '',
-                  fb === 'correct' ? 'memory-dot-correct'  : '',
-                  fb === 'wrong'   ? 'memory-dot-wrong'    : '',
-                  isDone           ? 'memory-dot-done'     : '',
-                  !isInSeq && !fb  ? 'memory-dot-inactive' : '',
-                ].filter(Boolean).join(' ')}
-                style={{ left: `calc(${pos.x}% - 20px)`, top: `calc(${pos.y}% - 20px)` }}
-                onClick={() => handleTap(posIdx)}
-              />
-            );
-          })}
+          <div className="memory-arena">
+            {/* 魔法陣の装飾（magic phaseはオーバーレイに切り替えるので非表示） */}
+            {!isMagicPhase && (
+              <div className="memory-magic-deco">
+                <div className="magic-ring-outer" />
+                <div className="magic-ring-inner" />
+                <div className="magic-glyph magic-glyph-1" />
+                <div className="magic-glyph magic-glyph-2" />
+                <div className="magic-glyph magic-glyph-3" />
+                <div className="magic-center" />
+              </div>
+            )}
+            {/* 全ドット表示（シーケンス外は薄く、シーケンス内は光る） */}
+            {LIGHT_POSITIONS.map((pos, posIdx) => {
+              const seqStepIdx  = sequence.indexOf(posIdx);
+              const isInSeq     = seqStepIdx !== -1;
+              const isLit       = phase === 'showing' && isInSeq && showingStep === seqStepIdx;
+              const isAnswering = phase === 'answering';
+              const isDone      = isAnswering && isInSeq && userInput.length > seqStepIdx;
+              const isTappable  = isAnswering && !isDone;
+              const fb          = tapFeedback[posIdx];
+              return (
+                <div
+                  key={posIdx}
+                  className={[
+                    'memory-dot',
+                    isLit            ? 'memory-dot-lit'      : '',
+                    isTappable       ? 'memory-dot-tappable' : '',
+                    fb === 'correct' ? 'memory-dot-correct'  : '',
+                    fb === 'wrong'   ? 'memory-dot-wrong'    : '',
+                    isDone           ? 'memory-dot-done'     : '',
+                    !isInSeq && !fb  ? 'memory-dot-inactive' : '',
+                  ].filter(Boolean).join(' ')}
+                  style={{ left: `calc(${pos.x}% - 20px)`, top: `calc(${pos.y}% - 20px)` }}
+                  onClick={() => handleTap(posIdx)}
+                />
+              );
+            })}
+          </div>
         </div>
-      </div>
 
       <div className="memory-status">
-        {phase === 'intro' && (
-          <>
-            <p className="memory-instr-main">光る順番を覚えて！</p>
-            <p className="memory-instr-sub">{cfg.count}箇所の光を記憶する</p>
-          </>
-        )}
-        {phase === 'showing'   && <p className="memory-watching-text">覚えて…</p>}
-        {phase === 'ready'     && <p className="memory-go-text">さあ、タップして！</p>}
-        {phase === 'answering' && (
-          <p className="memory-progress-text">
-            {userInput.length < sequence.length
-              ? `${userInput.length + 1} / ${sequence.length}`
-              : '判定中…'}
-          </p>
-        )}
-      </div>
+          {phase === 'intro' && (
+            <>
+              <p className="memory-instr-main">光る順番を覚えて！</p>
+              <p className="memory-instr-sub">{cfg.count}箇所の光を記憶する</p>
+            </>
+          )}
+          {phase === 'showing'   && <p className="memory-watching-text">覚えて…</p>}
+          {phase === 'ready'     && <p className="memory-go-text">さあ、タップして！</p>}
+          {phase === 'answering' && (
+            <p className="memory-progress-text">
+              {userInput.length < sequence.length
+                ? `${userInput.length + 1} / ${sequence.length}`
+                : '判定中…'}
+            </p>
+          )}
+          {phase === 'perfect' && <p className="memory-perfect-text">パーフェクト！</p>}
+        </div>
 
-      {!isMagicPhase && (
+      {!isMagicPhase && phase !== 'perfect' && (
         <div className="capture-give-up-wrap">
           <button className="capture-give-up-link" onClick={onBack}>諦める</button>
         </div>
