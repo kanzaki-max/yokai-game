@@ -1629,10 +1629,10 @@ function DescriptionScene({ yokai, onDone }) {
 
 // ===== 捕獲画面（記憶ゲーム方式） =====
 const MEMORY_CONFIG = {
-  N:  { count: 3, showMs: 1000, gapMs: 500  },
-  R:  { count: 4, showMs: 700,  gapMs: 300  },
-  SR: { count: 5, showMs: 500,  gapMs: 200  },
-  UR: { count: 6, showMs: 300,  gapMs: 150  },
+  N:  { count: 3, showMs: 300, gapMs: 150 },
+  R:  { count: 4, showMs: 300, gapMs: 150 },
+  SR: { count: 5, showMs: 300, gapMs: 150 },
+  UR: { count: 6, showMs: 300, gapMs: 150 },
 };
 
 // 魔法陣内のポジション（円周8点 + 中央、%）
